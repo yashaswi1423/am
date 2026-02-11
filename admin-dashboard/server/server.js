@@ -90,6 +90,25 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root endpoint for Vercel
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'AM Fashions API Server',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      products: '/api/products',
+      orders: '/api/orders',
+      customers: '/api/customers',
+      dashboard: '/api/dashboard',
+      analytics: '/api/analytics',
+      coupons: '/api/coupons',
+      paymentVerification: '/api/payment-verification',
+      auth: '/api/auth'
+    }
+  });
+});
+
 // Test email endpoint (for debugging)
 app.get('/api/test-email', async (req, res) => {
   try {
