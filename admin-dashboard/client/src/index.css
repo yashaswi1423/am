@@ -1,0 +1,282 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core Background Colors */
+    --bg-main: #0F172A;
+    --bg-panel: #1E293B;
+    --glass-overlay: rgba(255, 255, 255, 0.08);
+    
+    /* Glass Effect */
+    --glass-border: rgba(255, 255, 255, 0.10);
+    --shadow-glow: rgba(31, 38, 135, 0.37);
+    
+    /* Primary Brand Accent */
+    --accent-primary: #3B82F6;
+    --accent-primary-hover: #2563EB;
+    
+    /* Secondary Accent */
+    --accent-secondary: #14B8A6;
+    
+    /* Status Colors */
+    --status-success: #22C55E;
+    --status-warning: #F59E0B;
+    --status-error: #EF4444;
+    --status-info: #6366F1;
+    
+    /* Text Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    
+    /* Borders & Dividers */
+    --divider: #334155;
+  }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  #root {
+    min-height: 100vh;
+    background-color: var(--bg-main);
+  }
+}
+
+@layer components {
+  /* Glass Morphism Card */
+  .glass-card {
+    background: var(--glass-overlay);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 var(--shadow-glow);
+    border-radius: 0.75rem;
+  }
+
+  /* Glass Panel (for sidebar/nav) */
+  .glass-panel {
+    background: var(--bg-panel);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 var(--shadow-glow);
+  }
+
+  /* Glass Button */
+  .glass-button {
+    background: var(--glass-overlay);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px 0 var(--shadow-glow);
+  }
+
+  /* Primary Button */
+  .btn-primary {
+    background-color: var(--accent-primary);
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--accent-primary-hover);
+    box-shadow: 0 4px 20px 0 rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* Status Badges */
+  .badge-success {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: var(--status-success);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .badge-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--status-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+
+  .badge-error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--status-error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .badge-info {
+    background-color: rgba(99, 102, 241, 0.1);
+    color: var(--status-info);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+  }
+
+  /* Divider Line */
+  .divider {
+    border-color: var(--divider);
+  }
+
+  /* Smooth Transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Glow Effect on Hover */
+  .glow-on-hover {
+    transition: box-shadow 0.3s ease;
+  }
+
+  .glow-on-hover:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Sidebar Animation */
+  .sidebar-enter {
+    transform: translateX(-100%);
+  }
+
+  .sidebar-enter-active {
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-exit {
+    transform: translateX(0);
+  }
+
+  .sidebar-exit-active {
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Content Shift Animation */
+  .content-expanded {
+    margin-left: 0;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .content-collapsed {
+    margin-left: 16rem; /* 256px - sidebar width */
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-panel);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@layer utilities {
+  /* Text Utilities */
+  .text-primary {
+    color: var(--text-primary);
+  }
+
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  /* Background Utilities */
+  .bg-main {
+    background-color: var(--bg-main);
+  }
+
+  .bg-panel {
+    background-color: var(--bg-panel);
+  }
+
+  .bg-glass {
+    background: var(--glass-overlay);
+  }
+
+  /* Border Utilities */
+  .border-glass {
+    border-color: var(--glass-border);
+  }
+
+  .border-divider {
+    border-color: var(--divider);
+  }
+
+  /* Backdrop Blur */
+  .backdrop-blur-glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Animation Utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Hover Lift Effect */
+  .hover-lift {
+    transition: transform 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}
