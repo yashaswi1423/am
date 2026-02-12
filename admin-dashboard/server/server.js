@@ -82,12 +82,22 @@ app.locals.db = usePostgres ? db : db.promisePool;
 // ============================================
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    database: 'Connected'
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database query
+    const testQuery = await db.getOne('SELECT 1 as test');
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      database: testQuery ? 'Connected' : 'Error'
+    });
+  } catch (error) {
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      database: 'Error: ' + error.message
+    });
+  }
 });
 
 // Root endpoint for Vercel
