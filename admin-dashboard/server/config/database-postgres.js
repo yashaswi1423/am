@@ -10,16 +10,19 @@ const getPool = () => {
   if (!pool) {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      max: 1, // Minimal for serverless
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 10000,
     });
     
-    // Handle pool errors
     pool.on('error', (err) => {
-      console.error('Unexpected database pool error:', err);
+      console.error('Database pool error:', err.message);
     });
+    
+    console.log('✅ PostgreSQL pool initialized');
   }
   return pool;
 };
@@ -29,8 +32,9 @@ const testConnection = async () => {
   try {
     const currentPool = getPool();
     const client = await currentPool.connect();
-    console.log('✅ PostgreSQL Database connected successfully');
+    await client.query('SELECT 1');
     client.release();
+    console.log('✅ PostgreSQL Database connected successfully');
     return true;
   } catch (error) {
     console.error('❌ PostgreSQL Database connection failed:', error.message);
@@ -78,7 +82,6 @@ const getMany = async (sql, params = []) => {
 const insert = async (sql, params = []) => {
   try {
     const currentPool = getPool();
-    // PostgreSQL uses RETURNING clause to get inserted ID
     const sqlWithReturning = sql.includes('RETURNING') ? sql : sql + ' RETURNING *';
     const result = await currentPool.query(sqlWithReturning, params);
     return result.rows[0];
