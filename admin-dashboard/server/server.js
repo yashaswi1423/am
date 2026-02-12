@@ -178,11 +178,15 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Start server for local development
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
+// Start server (for Render, Railway, or local development)
+// Only skip for Vercel serverless
+const isVercel = process.env.VERCEL === '1';
+
+if (!isVercel) {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
 
