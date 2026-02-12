@@ -5,7 +5,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Import database based on environment
-const useSupabaseClient = process.env.USE_SUPABASE_CLIENT === 'true' || !process.env.DATABASE_URL;
+// Prioritize USE_SUPABASE_CLIENT flag
+const useSupabaseClient = process.env.USE_SUPABASE_CLIENT === 'true';
 const db = useSupabaseClient
   ? (await import('./config/database-supabase-client.js')).default
   : (await import('./config/database-postgres.js')).default;
