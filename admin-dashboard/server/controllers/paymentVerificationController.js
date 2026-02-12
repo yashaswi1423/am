@@ -43,7 +43,6 @@ export const uploadMiddleware = upload.single('screenshot');
 =========================== */
 export const submitPaymentVerification = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const {
       order_id,
       transaction_id,
@@ -129,7 +128,6 @@ export const submitPaymentVerification = async (req, res) => {
 =========================== */
 export const getPendingVerifications = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const verifications = await db.getMany(
       `SELECT * FROM vw_pending_verifications ORDER BY submitted_at ASC`
     );
@@ -154,7 +152,6 @@ export const getPendingVerifications = async (req, res) => {
 =========================== */
 export const getAllVerifications = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { status, limit = 100, offset = 0 } = req.query;
     
     let query = `SELECT * FROM vw_all_verifications`;
@@ -190,7 +187,6 @@ export const getAllVerifications = async (req, res) => {
 =========================== */
 export const getVerificationById = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const verification = await db.getOne(
       `SELECT * FROM vw_all_verifications WHERE verification_id = $1`,
       [req.params.id]
@@ -231,7 +227,6 @@ export const getVerificationById = async (req, res) => {
 =========================== */
 export const verifyPayment = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { admin_id, admin_notes } = req.body;
     const verification_id = req.params.id;
 
@@ -269,7 +264,6 @@ export const verifyPayment = async (req, res) => {
 =========================== */
 export const rejectPayment = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { admin_id, rejection_reason } = req.body;
     const verification_id = req.params.id;
 
@@ -333,7 +327,6 @@ export const getScreenshot = async (req, res) => {
 =========================== */
 export const getVerificationByOrderId = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const verification = await db.getOne(
       `SELECT * FROM vw_all_verifications WHERE order_id = $1 ORDER BY submitted_at DESC LIMIT 1`,
       [req.params.orderId]
@@ -365,7 +358,6 @@ export const getVerificationByOrderId = async (req, res) => {
 =========================== */
 export const getVerificationStats = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const stats = await db.getMany(
       `SELECT 
         verification_status,

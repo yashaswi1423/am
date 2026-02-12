@@ -14,7 +14,6 @@ export const getAllCoupons = async (req, res) => {
 // GET /api/coupons/:id
 export const getCouponById = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const coupon = await db.getOne('SELECT * FROM coupons WHERE coupon_id = $1', [id]);
 
@@ -31,7 +30,6 @@ export const getCouponById = async (req, res) => {
 // POST /api/coupons
 export const createCoupon = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { coupon_code, description, discount_type, discount_value, min_order_value, max_discount, usage_limit, valid_from, valid_until } = req.body;
 
     if (!coupon_code || !discount_type || !discount_value || !valid_from || !valid_until) {
@@ -53,7 +51,6 @@ export const createCoupon = async (req, res) => {
 // PUT /api/coupons/:id
 export const updateCoupon = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const { coupon_code, description, discount_type, discount_value, min_order_value, max_discount, usage_limit, is_active, valid_from, valid_until } = req.body;
 
@@ -77,7 +74,6 @@ export const updateCoupon = async (req, res) => {
 // DELETE /api/coupons/:id
 export const deleteCoupon = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const affectedRows = await db.deleteRecord('DELETE FROM coupons WHERE coupon_id = $1', [id]);
 
@@ -94,7 +90,6 @@ export const deleteCoupon = async (req, res) => {
 // POST /api/coupons/validate
 export const validateCoupon = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { coupon_code, order_amount } = req.body;
 
     if (!coupon_code) {
@@ -154,7 +149,6 @@ export const validateCoupon = async (req, res) => {
 // PATCH /api/coupons/:id/toggle-status
 export const toggleCouponStatus = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
 
     const coupon = await db.getOne('SELECT is_active FROM coupons WHERE coupon_id = $1', [id]);

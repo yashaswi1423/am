@@ -38,7 +38,6 @@ export const getOverview = async (req, res) => {
 // GET /api/analytics/sales
 export const getSalesData = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { startDate, endDate } = req.query;
 
     let sql = 'SELECT DATE(created_at) as date, COUNT(*) as sales, SUM(total_amount) as revenue FROM orders';
@@ -62,7 +61,6 @@ export const getSalesData = async (req, res) => {
 // GET /api/analytics/revenue
 export const getRevenueData = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { period = 'daily' } = req.query;
 
     let groupBy = 'DATE(created_at)';
@@ -91,7 +89,6 @@ export const getRevenueData = async (req, res) => {
 // GET /api/analytics/top-products
 export const getTopProducts = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { limit = 10 } = req.query;
 
     const topProducts = await db.getMany(
@@ -116,7 +113,6 @@ export const getTopProducts = async (req, res) => {
 // GET /api/analytics/top-customers
 export const getTopCustomers = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { limit = 10 } = req.query;
 
     const topCustomers = await db.getMany(
@@ -140,7 +136,6 @@ export const getTopCustomers = async (req, res) => {
 // GET /api/analytics/orders-by-status
 export const getOrdersByStatus = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const ordersByStatus = await db.getMany(
       `SELECT order_status, COUNT(*) as count, SUM(total_amount) as total_amount
        FROM orders
@@ -156,7 +151,6 @@ export const getOrdersByStatus = async (req, res) => {
 // GET /api/analytics/monthly-trends
 export const getMonthlyTrends = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const monthlyTrends = await db.getMany(
       `SELECT 
          TO_CHAR(created_at, 'YYYY-MM') as month,

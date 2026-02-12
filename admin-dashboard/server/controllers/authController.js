@@ -1,4 +1,5 @@
 // controllers/authController.js
+import db from '../config/database-postgres.js';
 import { sendLoginApprovalRequest } from '../services/emailService.js';
 import crypto from 'crypto';
 
@@ -6,7 +7,6 @@ import crypto from 'crypto';
 export const requestLoginApproval = async (req, res) => {
   try {
     const { username } = req.body;
-    const db = req.app.locals.db;
     
     // Get client information
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
@@ -23,7 +23,7 @@ export const requestLoginApproval = async (req, res) => {
     const insertQuery = `
       INSERT INTO login_requests 
       (username, request_token, ip_address, user_agent, expires_at, status)
-      VALUES (?, ?, ?, ?, ?, 'pending')
+      VALUES ($1, $2, $3, $4, $5, 'pending')
     `;
     
     await db.execute(insertQuery, [
@@ -72,7 +72,6 @@ export const requestLoginApproval = async (req, res) => {
 export const checkApprovalStatus = async (req, res) => {
   try {
     const { token } = req.query;
-    const db = req.app.locals.db;
 
     if (!token) {
       return res.status(400).json({
@@ -85,12 +84,12 @@ export const checkApprovalStatus = async (req, res) => {
     const query = `
       SELECT status, expires_at, username
       FROM login_requests
-      WHERE request_token = ?
+      WHERE request_token = $1
     `;
     
-    const [rows] = await db.execute(query, [token]);
+    const request = await db.getOne(query, [token]);
 
-    if (rows.length === 0) {
+    if (!request) {
       return res.json({
         success: false,
         status: 'invalid',
@@ -98,15 +97,14 @@ export const checkApprovalStatus = async (req, res) => {
       });
     }
 
-    const request = rows[0];
     const now = new Date();
     const expiresAt = new Date(request.expires_at);
 
     // Check if expired
     if (now > expiresAt && request.status === 'pending') {
       // Update status to expired
-      await db.execute(
-        'UPDATE login_requests SET status = ? WHERE request_token = ?',
+      await db.update(
+        'UPDATE login_requests SET status = $1 WHERE request_token = $2',
         ['expired', token]
       );
       
@@ -139,7 +137,6 @@ export const checkApprovalStatus = async (req, res) => {
 export const handleApprovalAction = async (req, res) => {
   try {
     const { token, action } = req.query;
-    const db = req.app.locals.db;
 
     if (!token || !action) {
       return res.send(`
@@ -166,12 +163,12 @@ export const handleApprovalAction = async (req, res) => {
     const checkQuery = `
       SELECT status, expires_at, username
       FROM login_requests
-      WHERE request_token = ?
+      WHERE request_token = $1
     `;
     
-    const [rows] = await db.execute(checkQuery, [token]);
+    const request = await db.getOne(checkQuery, [token]);
 
-    if (rows.length === 0) {
+    if (!request) {
       return res.send(`
         <html>
           <head>
@@ -192,7 +189,6 @@ export const handleApprovalAction = async (req, res) => {
       `);
     }
 
-    const request = rows[0];
     const now = new Date();
     const expiresAt = new Date(request.expires_at);
 
@@ -244,11 +240,11 @@ export const handleApprovalAction = async (req, res) => {
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     const updateQuery = `
       UPDATE login_requests
-      SET status = ?, approved_at = NOW(), approved_by = ?
-      WHERE request_token = ?
+      SET status = $1, approved_at = NOW(), approved_by = $2
+      WHERE request_token = $3
     `;
     
-    await db.execute(updateQuery, [newStatus, 'admin', token]);
+    await db.update(updateQuery, [newStatus, 'admin', token]);
 
     // Send success response
     if (action === 'approve') {
