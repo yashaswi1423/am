@@ -40,8 +40,9 @@ export const sendLoginApprovalRequest = async (requestDetails) => {
   const { username, ipAddress, timestamp, userAgent, approvalToken } = requestDetails;
 
   // Create approval and rejection links
-  const approvalLink = `http://localhost:5000/api/auth/approve-login?token=${approvalToken}&action=approve`;
-  const rejectLink = `http://localhost:5000/api/auth/approve-login?token=${approvalToken}&action=reject`;
+  const baseUrl = process.env.API_BASE_URL || process.env.BACKEND_URL || 'https://am-fashions-backend.onrender.com';
+  const approvalLink = `${baseUrl}/api/auth/approve-login?token=${approvalToken}&action=approve`;
+  const rejectLink = `${baseUrl}/api/auth/approve-login?token=${approvalToken}&action=reject`;
 
   const mailOptions = {
     from: EMAIL_CONFIG.auth.user,

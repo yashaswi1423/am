@@ -126,7 +126,8 @@ const Cart = ({ cartItems, removeFromCart, updateQuantity }) => {
       formData.append('customer_phone', addressForm.phone);
       formData.append('screenshot', paymentData.screenshot);
 
-      const verificationResponse = await fetch('http://localhost:5000/api/payment-verification/submit', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const verificationResponse = await fetch(`${API_URL}/payment-verification/submit`, {
         method: 'POST',
         body: formData
       });

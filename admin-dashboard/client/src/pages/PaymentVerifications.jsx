@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Eye, Clock, AlertCircle, Users } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const PaymentVerifications = () => {
   const [verifications, setVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,8 +19,8 @@ const PaymentVerifications = () => {
     setLoading(true);
     try {
       const endpoint = filter === 'pending' 
-        ? 'http://localhost:5000/api/payment-verification/pending'
-        : `http://localhost:5000/api/payment-verification/all?status=${filter}`;
+        ? `${API_URL}/payment-verification/pending`
+        : `${API_URL}/payment-verification/all?status=${filter}`;
       
       const response = await fetch(endpoint);
       const data = await response.json();
@@ -39,7 +41,7 @@ const PaymentVerifications = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/payment-verification/${verificationId}/verify`, {
+      const response = await fetch(`${API_URL}/payment-verification/${verificationId}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,7 +77,7 @@ const PaymentVerifications = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/payment-verification/${verificationId}/reject`, {
+      const response = await fetch(`${API_URL}/payment-verification/${verificationId}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -214,10 +216,10 @@ const PaymentVerifications = () => {
                   </h4>
                   {verification.screenshot_filename ? (
                     <img
-                      src={`http://localhost:5000/api/payment-verification/screenshot/${verification.screenshot_filename}`}
+                      src={`${API_URL}/payment-verification/screenshot/${verification.screenshot_filename}`}
                       alt="Payment Screenshot"
                       className="w-full h-64 object-contain bg-dark/50 rounded-lg cursor-pointer hover:scale-105 transition-smooth border border-glass"
-                      onClick={() => window.open(`http://localhost:5000/api/payment-verification/screenshot/${verification.screenshot_filename}`, '_blank')}
+                      onClick={() => window.open(`${API_URL}/payment-verification/screenshot/${verification.screenshot_filename}`, '_blank')}
                     />
                   ) : (
                     <div className="w-full h-64 bg-dark/50 rounded-lg flex items-center justify-center border border-glass">

@@ -19,8 +19,9 @@ const AdminLogin = () => {
 
     const checkStatus = async () => {
       try {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
         const response = await fetch(
-          `http://localhost:5000/api/auth/check-status?token=${approvalToken}`
+          `${API_URL}/auth/check-status?token=${approvalToken}`
         );
         const data = await response.json();
 
@@ -66,7 +67,8 @@ const AdminLogin = () => {
     if (credentials.username === 'admin' && credentials.password === 'admin123') {
       try {
         // Request approval from admin
-        const response = await fetch('http://localhost:5000/api/auth/request-approval', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+        const response = await fetch(`${API_URL}/auth/request-approval`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
