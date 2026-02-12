@@ -5,12 +5,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Import database based on environment
-const usePostgres = process.env.DATABASE_URL ? true : false;
-const db = usePostgres 
-  ? (await import('./config/database-postgres.js')).default
-  : (await import('./config/database.js')).default;
+const useSupabaseClient = process.env.USE_SUPABASE_CLIENT === 'true' || !process.env.DATABASE_URL;
+const db = useSupabaseClient
+  ? (await import('./config/database-supabase-client.js')).default
+  : (await import('./config/database-postgres.js')).default;
 
-console.log(`🗄️  Using ${usePostgres ? 'PostgreSQL' : 'MySQL'} database`);
+console.log(`🗄️  Using ${useSupabaseClient ? 'Supabase Client' : 'PostgreSQL'} database`);
 const app = express();
 
 // ============================================
@@ -70,22 +70,11 @@ app.use((req, res, next) => {
 // DATABASE CONNECTION
 // ============================================
 
-// Database is imported at the top based on DATABASE_URL environment variable
-// PostgreSQL if DATABASE_URL exists, MySQL otherwise
+// Database is imported at the top based on USE_SUPABASE_CLIENT or DATABASE_URL
+// Supabase Client if USE_SUPABASE_CLIENT=true, otherwise PostgreSQL
 
 // Test database connection
-if (usePostgres) {
-  await db.testConnection();
-} else {
-  db.pool.getConnection((err, connection) => {
-    if (err) {
-      console.error('❌ Database connection failed:', err.message);
-      process.exit(1);
-    }
-    console.log('✅ Database connected successfully');
-    connection.release();
-  });
-}
+await db.testConnection();
 
 // Export db for use in controllers
 app.locals.db = usePostgres ? db : db.promisePool;
@@ -206,17 +195,12 @@ if (!isVercel) {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
-  if (usePostgres) {
-    db.closePool().then(() => {
-      console.log('Database connection closed');
-      process.exit(0);
-    });
-  } else {
-    db.pool.end(() => {
-      console.log('Database connection closed');
-      process.exit(0);
-    });
-  }
+  db.closePool().then(() => {
+    console.log('Database connection closed');
+    process.exit(0);
+  }).catch(() => {
+    process.exit(0);
+  });
 });
 
 // Export for Vercel serverless
