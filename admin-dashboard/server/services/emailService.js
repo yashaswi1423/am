@@ -10,7 +10,7 @@ const EMAIL_CONFIG = {
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER || 'madasumiteesh@gmail.com',
-    pass: process.env.EMAIL_PASSWORD || 'mnfc xdxe ojpi rtzf'
+    pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS || 'mnfc xdxe ojpi rtzf'
   }
 };
 
