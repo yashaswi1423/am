@@ -76,8 +76,8 @@ app.use((req, res, next) => {
 // Test database connection
 await db.testConnection();
 
-// Export db for use in controllers
-app.locals.db = usePostgres ? db : db.promisePool;
+// Database is imported at the top and used directly in controllers
+// No need for app.locals.db anymore
 
 // ============================================
 // API ROUTES
