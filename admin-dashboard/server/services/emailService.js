@@ -40,7 +40,7 @@ export const sendLoginApprovalRequest = async (requestDetails) => {
   const { username, ipAddress, timestamp, userAgent, approvalToken } = requestDetails;
 
   // Create approval and rejection links
-  const baseUrl = process.env.API_BASE_URL || process.env.BACKEND_URL || 'https://am-fashions-backend.onrender.com';
+  const baseUrl = process.env.API_BASE_URL || process.env.BACKEND_URL || 'https://am-seven-coral.vercel.app';
   const approvalLink = `${baseUrl}/api/auth/approve-login?token=${approvalToken}&action=approve`;
   const rejectLink = `${baseUrl}/api/auth/approve-login?token=${approvalToken}&action=reject`;
 
