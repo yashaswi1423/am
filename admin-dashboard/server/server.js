@@ -15,34 +15,32 @@ console.log(`🗄️  Using ${useSupabaseClient ? 'Supabase Client' : 'PostgreSQ
 const app = express();
 
 // ============================================
+// CORS CONFIGURATION - MUST BE FIRST
+// ============================================
+
+// Handle preflight requests first
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.status(200).end();
+});
+
+// Apply CORS to all requests
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  next();
+});
+
+// ============================================
 // MIDDLEWARE CONFIGURATION
 // ============================================
 
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// CORS configuration - Allow all origins (simplified for deployment)
-app.use(cors({
-  origin: '*', // Allow all origins
-  credentials: false, // Set to false when using wildcard origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
-
-// Additional CORS headers for preflight
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  next();
-});
 
 // Request logging middleware (development)
 app.use((req, res, next) => {
