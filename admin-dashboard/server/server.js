@@ -22,43 +22,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration - Allow both main website and admin dashboard
+// CORS configuration - Allow all origins (simplified for deployment)
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Allow all Vercel preview URLs and production URLs
-    if (origin.includes('vercel.app') || 
-        origin.includes('localhost') ||
-        origin.includes('onrender.com')) {
-      return callback(null, true);
-    }
-    
-    // Allow specific origins from environment variables
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      process.env.ADMIN_URL,
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'http://localhost:3003'
-    ].filter(Boolean);
-    
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    // Allow all other origins in development
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
+  origin: '*', // Allow all origins
+  credentials: false, // Set to false when using wildcard origin
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Request logging middleware (development)
