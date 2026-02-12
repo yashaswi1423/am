@@ -14,7 +14,6 @@ export const getAllCustomers = async (req, res) => {
 // GET /api/customers/:id
 export const getCustomerById = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const customer = await db.getOne('SELECT * FROM customers WHERE customer_id = $1', [id]);
 
@@ -31,7 +30,6 @@ export const getCustomerById = async (req, res) => {
 // GET /api/customers/email/:email
 export const getCustomerByEmail = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { email } = req.params;
     const customer = await db.getOne('SELECT * FROM customers WHERE email = $1', [email]);
 
@@ -48,7 +46,6 @@ export const getCustomerByEmail = async (req, res) => {
 // POST /api/customers
 export const createCustomer = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { email, password_hash, first_name, last_name, phone, address_line1, address_line2, city, state, postal_code, country } = req.body;
 
     if (!email || !first_name || !last_name || !password_hash) {
@@ -78,7 +75,6 @@ export const createCustomer = async (req, res) => {
 // PUT /api/customers/:id
 export const updateCustomer = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const { email, first_name, last_name, phone, address_line1, address_line2, city, state, postal_code, country } = req.body;
 
@@ -100,7 +96,6 @@ export const updateCustomer = async (req, res) => {
 // DELETE /api/customers/:id
 export const deleteCustomer = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const affectedRows = await db.deleteRecord('DELETE FROM customers WHERE customer_id = $1', [id]);
 
@@ -117,7 +112,6 @@ export const deleteCustomer = async (req, res) => {
 // GET /api/customers/:id/orders
 export const getCustomerOrders = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
 
     const orders = await db.getMany(
@@ -134,7 +128,6 @@ export const getCustomerOrders = async (req, res) => {
 // GET /api/customers/:id/stats
 export const getCustomerStats = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
 
     const stats = await db.getOne(
@@ -156,7 +149,6 @@ export const getCustomerStats = async (req, res) => {
 // PATCH /api/customers/:id/status
 export const updateCustomerStatus = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const { is_active } = req.body;
 
