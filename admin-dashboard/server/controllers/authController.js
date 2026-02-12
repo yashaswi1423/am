@@ -26,7 +26,7 @@ export const requestLoginApproval = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, 'pending')
     `;
     
-    await db.execute(insertQuery, [
+    await db.executeQuery(insertQuery, [
       username,
       approvalToken,
       ipAddress,
