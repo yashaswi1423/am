@@ -2,19 +2,33 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 
-// Create a connection pool for PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// Singleton pool instance
+let pool = null;
+
+// Get or create pool
+const getPool = () => {
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
+    
+    // Handle pool errors
+    pool.on('error', (err) => {
+      console.error('Unexpected database pool error:', err);
+    });
+  }
+  return pool;
+};
 
 // Test database connection
 const testConnection = async () => {
   try {
-    const client = await pool.connect();
+    const currentPool = getPool();
+    const client = await currentPool.connect();
     console.log('✅ PostgreSQL Database connected successfully');
     client.release();
     return true;
@@ -27,7 +41,8 @@ const testConnection = async () => {
 // Execute a query with error handling
 const executeQuery = async (sql, params = []) => {
   try {
-    const result = await pool.query(sql, params);
+    const currentPool = getPool();
+    const result = await currentPool.query(sql, params);
     return result.rows;
   } catch (error) {
     console.error('Query execution error:', error.message);
@@ -38,7 +53,8 @@ const executeQuery = async (sql, params = []) => {
 // Get a single row
 const getOne = async (sql, params = []) => {
   try {
-    const result = await pool.query(sql, params);
+    const currentPool = getPool();
+    const result = await currentPool.query(sql, params);
     return result.rows[0] || null;
   } catch (error) {
     console.error('Query error:', error.message);
@@ -49,7 +65,8 @@ const getOne = async (sql, params = []) => {
 // Get multiple rows
 const getMany = async (sql, params = []) => {
   try {
-    const result = await pool.query(sql, params);
+    const currentPool = getPool();
+    const result = await currentPool.query(sql, params);
     return result.rows;
   } catch (error) {
     console.error('Query error:', error.message);
@@ -60,9 +77,10 @@ const getMany = async (sql, params = []) => {
 // Insert a record and return the inserted row
 const insert = async (sql, params = []) => {
   try {
+    const currentPool = getPool();
     // PostgreSQL uses RETURNING clause to get inserted ID
     const sqlWithReturning = sql.includes('RETURNING') ? sql : sql + ' RETURNING *';
-    const result = await pool.query(sqlWithReturning, params);
+    const result = await currentPool.query(sqlWithReturning, params);
     return result.rows[0];
   } catch (error) {
     console.error('Insert error:', error.message);
@@ -73,7 +91,8 @@ const insert = async (sql, params = []) => {
 // Update records and return affected rows count
 const update = async (sql, params = []) => {
   try {
-    const result = await pool.query(sql, params);
+    const currentPool = getPool();
+    const result = await currentPool.query(sql, params);
     return result.rowCount;
   } catch (error) {
     console.error('Update error:', error.message);
@@ -84,7 +103,8 @@ const update = async (sql, params = []) => {
 // Delete records and return affected rows count
 const deleteRecord = async (sql, params = []) => {
   try {
-    const result = await pool.query(sql, params);
+    const currentPool = getPool();
+    const result = await currentPool.query(sql, params);
     return result.rowCount;
   } catch (error) {
     console.error('Delete error:', error.message);
@@ -94,7 +114,8 @@ const deleteRecord = async (sql, params = []) => {
 
 // Begin transaction
 const beginTransaction = async () => {
-  const client = await pool.connect();
+  const currentPool = getPool();
+  const client = await currentPool.connect();
   await client.query('BEGIN');
   return client;
 };
@@ -114,16 +135,25 @@ const rollbackTransaction = async (client) => {
 // Close pool gracefully
 const closePool = async () => {
   try {
-    await pool.end();
-    console.log('Database pool closed');
+    if (pool) {
+      await pool.end();
+      pool = null;
+      console.log('Database pool closed');
+    }
   } catch (error) {
     console.error('Error closing database pool:', error.message);
     throw error;
   }
 };
 
+// Query function for direct access
+const query = async (sql, params = []) => {
+  const currentPool = getPool();
+  return currentPool.query(sql, params);
+};
+
 export default {
-  pool,
+  getPool,
   testConnection,
   executeQuery,
   getOne,
@@ -135,5 +165,5 @@ export default {
   commitTransaction,
   rollbackTransaction,
   closePool,
-  query: pool.query.bind(pool)
+  query
 };
