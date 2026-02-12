@@ -30,10 +30,17 @@ const createTransporter = () => {
 
 // Send admin login approval request
 export const sendLoginApprovalRequest = async (requestDetails) => {
+  console.log('📧 Starting email send process...');
+  console.log('📧 Email config:', {
+    user: process.env.EMAIL_USER || 'madasumiteesh@gmail.com',
+    hasPassword: !!(process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS),
+    adminEmail: process.env.ADMIN_EMAIL || 'madasumiteesh@gmail.com'
+  });
+  
   const transporter = createTransporter();
   
   if (!transporter) {
-    console.error('Email transporter not configured');
+    console.error('❌ Email transporter not configured');
     return { success: false, error: 'Email service not configured' };
   }
 
@@ -41,6 +48,7 @@ export const sendLoginApprovalRequest = async (requestDetails) => {
 
   // Create approval and rejection links
   const baseUrl = process.env.API_BASE_URL || process.env.BACKEND_URL || 'https://am-seven-coral.vercel.app';
+  console.log('🔗 Base URL for links:', baseUrl);
   const approvalLink = `${baseUrl}/api/auth/approve-login?token=${approvalToken}&action=approve`;
   const rejectLink = `${baseUrl}/api/auth/approve-login?token=${approvalToken}&action=reject`;
 

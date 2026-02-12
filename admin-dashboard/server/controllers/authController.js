@@ -6,7 +6,18 @@ import crypto from 'crypto';
 // Request admin login approval
 export const requestLoginApproval = async (req, res) => {
   try {
+    console.log('🔐 Login approval request received');
     const { username } = req.body;
+    
+    if (!username) {
+      console.error('❌ No username provided');
+      return res.status(400).json({
+        success: false,
+        message: 'Username is required'
+      });
+    }
+    
+    console.log('👤 Username:', username);
     
     // Get client information
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
@@ -15,24 +26,35 @@ export const requestLoginApproval = async (req, res) => {
 
     // Generate unique approval token
     const approvalToken = crypto.randomBytes(32).toString('hex');
+    console.log('🔑 Generated approval token');
     
     // Set expiration time (10 minutes from now)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     // Save login request to database
+    console.log('💾 Saving to database...');
     const insertQuery = `
       INSERT INTO login_requests 
       (username, request_token, ip_address, user_agent, expires_at, status)
       VALUES ($1, $2, $3, $4, $5, 'pending')
     `;
     
-    await db.executeQuery(insertQuery, [
-      username,
-      approvalToken,
-      ipAddress,
-      userAgent,
-      expiresAt
-    ]);
+    try {
+      await db.executeQuery(insertQuery, [
+        username,
+        approvalToken,
+        ipAddress,
+        userAgent,
+        expiresAt
+      ]);
+      console.log('✅ Database insert successful');
+    } catch (dbError) {
+      console.error('❌ Database error:', dbError.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Database error: ' + dbError.message
+      });
+    }
 
     // Prepare approval request details
     const requestDetails = {
@@ -44,26 +66,30 @@ export const requestLoginApproval = async (req, res) => {
     };
 
     // Send approval email
+    console.log('📧 Sending approval email...');
     const emailResult = await sendLoginApprovalRequest(requestDetails);
+    console.log('📧 Email result:', emailResult);
     
     if (emailResult.success) {
+      console.log('✅ Email sent successfully');
       res.json({
         success: true,
         message: 'Approval request sent. Please check your email.',
         requestToken: approvalToken
       });
     } else {
+      console.error('❌ Email failed:', emailResult.error);
       res.status(500).json({
         success: false,
-        message: 'Failed to send approval email. Please try again.'
+        message: 'Failed to send approval email: ' + (emailResult.error || 'Unknown error')
       });
     }
 
   } catch (error) {
-    console.error('Error in requestLoginApproval:', error);
+    console.error('❌ Error in requestLoginApproval:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error. Please try again later.'
+      message: 'Server error: ' + error.message
     });
   }
 };
