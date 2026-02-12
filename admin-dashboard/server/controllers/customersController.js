@@ -1,9 +1,9 @@
 // controllers/customersController.js
+import db from '../config/database-postgres.js';
 
 // GET /api/customers
 export const getAllCustomers = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const customers = await db.getMany('SELECT * FROM customers ORDER BY created_at DESC');
     res.json({ success: true, data: customers });
   } catch (error) {

@@ -1,9 +1,9 @@
 // controllers/analyticsController.js
+import db from '../config/database-postgres.js';
 
 // GET /api/analytics/overview
 export const getOverview = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const totalRevenue = await db.getOne(
       'SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE order_status = $1',
       ['delivered']

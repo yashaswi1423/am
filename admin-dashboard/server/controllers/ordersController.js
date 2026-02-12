@@ -1,11 +1,11 @@
 // controllers/ordersController.js
+import db from '../config/database-postgres.js';
 
 /* ===========================
    GET /api/orders
 =========================== */
 export const getAllOrders = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const orders = await db.getMany(
       `SELECT 
         o.order_id,
@@ -37,7 +37,6 @@ export const getAllOrders = async (req, res) => {
 =========================== */
 export const getOrderById = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const order = await db.getOne(
       `SELECT 
         o.*,
@@ -66,7 +65,6 @@ export const getOrderById = async (req, res) => {
 =========================== */
 export const createOrder = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     console.log('Received order request:', JSON.stringify(req.body, null, 2));
     
     const { 
@@ -169,7 +167,6 @@ export const updateOrderStatus = async (req, res) => {
   }
 
   try {
-    const db = req.app.locals.db;
     const affected = await db.update(
       'UPDATE orders SET order_status = $1, updated_at = CURRENT_TIMESTAMP WHERE order_id = $2',
       [status, req.params.id]
@@ -191,7 +188,6 @@ export const updateOrderStatus = async (req, res) => {
 =========================== */
 export const deleteOrder = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     // Delete order items first (foreign key constraint)
     await db.deleteRecord(
       'DELETE FROM order_items WHERE order_id = $1',

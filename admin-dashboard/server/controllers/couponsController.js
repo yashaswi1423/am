@@ -1,9 +1,9 @@
 // controllers/couponsController.js
+import db from '../config/database-postgres.js';
 
 // GET /api/coupons
 export const getAllCoupons = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const coupons = await db.getMany('SELECT * FROM coupons ORDER BY created_at DESC');
     res.json({ success: true, data: coupons });
   } catch (error) {

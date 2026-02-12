@@ -1,9 +1,9 @@
 // controllers/dashboardController.js
+import db from '../config/database-postgres.js';
 
 // GET /api/dashboard/stats
 export const getDashboardStats = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     
     const totalRevenue = await db.getOne(
       'SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE order_status = $1',
@@ -44,7 +44,6 @@ export const getDashboardStats = async (req, res) => {
 // GET /api/dashboard/recent-orders
 export const getRecentOrders = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { limit = 10 } = req.query;
 
     const recentOrders = await db.getMany(
@@ -65,7 +64,6 @@ export const getRecentOrders = async (req, res) => {
 // GET /api/dashboard/recent-customers
 export const getRecentCustomers = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { limit = 10 } = req.query;
 
     const recentCustomers = await db.getMany(
@@ -82,7 +80,6 @@ export const getRecentCustomers = async (req, res) => {
 // GET /api/dashboard/low-stock
 export const getLowStockProducts = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { threshold = 10 } = req.query;
 
     const lowStockProducts = await db.getMany(
@@ -103,7 +100,6 @@ export const getLowStockProducts = async (req, res) => {
 // GET /api/dashboard/revenue-chart
 export const getRevenueChart = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { days = 7 } = req.query;
 
     const revenueData = await db.getMany(

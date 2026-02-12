@@ -1,9 +1,9 @@
 // controllers/productsController.js
+import db from '../config/database-postgres.js';
 
 // GET /api/products
 export const getAllProducts = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const products = await db.getMany('SELECT * FROM products ORDER BY created_at DESC');
     res.json({ success: true, data: products });
   } catch (error) {
@@ -14,7 +14,6 @@ export const getAllProducts = async (req, res) => {
 // GET /api/products/:id
 export const getProductById = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const product = await db.getOne('SELECT * FROM products WHERE product_id = $1', [id]);
 
@@ -31,7 +30,6 @@ export const getProductById = async (req, res) => {
 // POST /api/products
 export const createProduct = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { product_name, description, category, brand, base_price, discount_percentage, is_featured, image_url } = req.body;
 
     if (!product_name || !base_price || !category) {
@@ -52,7 +50,6 @@ export const createProduct = async (req, res) => {
 // PUT /api/products/:id
 export const updateProduct = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const { product_name, description, category, brand, base_price, discount_percentage, is_active, is_featured, image_url } = req.body;
 
@@ -74,7 +71,6 @@ export const updateProduct = async (req, res) => {
 // DELETE /api/products/:id
 export const deleteProduct = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const affectedRows = await db.deleteRecord('DELETE FROM products WHERE product_id = $1', [id]);
 
@@ -91,7 +87,6 @@ export const deleteProduct = async (req, res) => {
 // PATCH /api/products/:id/stock
 export const updateStock = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { id } = req.params;
     const { variant_id, stock_quantity } = req.body;
 
@@ -119,7 +114,6 @@ export const updateStock = async (req, res) => {
 // GET /api/products/category/:category
 export const getProductsByCategory = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { category } = req.params;
     const products = await db.getMany('SELECT * FROM products WHERE category = $1 AND is_active = TRUE', [category]);
 
@@ -132,7 +126,6 @@ export const getProductsByCategory = async (req, res) => {
 // GET /api/products/search
 export const searchProducts = async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { q } = req.query;
 
     if (!q) {
