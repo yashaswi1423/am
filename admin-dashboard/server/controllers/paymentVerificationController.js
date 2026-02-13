@@ -78,12 +78,10 @@ export const submitPaymentVerification = async (req, res) => {
     }
 
     // Insert verification record with Supabase URL
-    const result = await db.insert(
+    const verificationId = await db.insert(
       `INSERT INTO payment_verifications 
        (order_id, transaction_id, payment_method, payment_amount, screenshot_path, screenshot_filename, screenshot_url, customer_name, customer_email, customer_phone, verification_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
-       RETURNING verification_id
-      `,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         order_id,
         transaction_id,
@@ -94,17 +92,16 @@ export const submitPaymentVerification = async (req, res) => {
         uploadResult.url,
         customer_name,
         customer_email,
-        customer_phone || null
+        customer_phone || null,
+        'pending'
       ]
     );
-
-    const verification_id = result.verification_id;
 
     res.status(201).json({
       success: true,
       message: 'Payment verification submitted successfully',
       data: {
-        verification_id,
+        verification_id: verificationId,
         order_id,
         transaction_id,
         status: 'pending_verification',
@@ -132,14 +129,15 @@ export const getPendingVerifications = async (req, res) => {
         pv.*,
         o.order_number,
         o.order_status,
-        CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+        (c.first_name || ' ' || c.last_name) as customer_name,
         c.email as customer_email,
         c.phone as customer_phone
        FROM payment_verifications pv
        LEFT JOIN orders o ON pv.order_id = o.order_id
        LEFT JOIN customers c ON o.customer_id = c.customer_id
-       WHERE pv.verification_status = 'pending'
-       ORDER BY pv.created_at ASC`
+       WHERE pv.verification_status = ?
+       ORDER BY pv.created_at ASC`,
+      ['pending']
     );
 
     res.json({
@@ -168,7 +166,7 @@ export const getAllVerifications = async (req, res) => {
       pv.*,
       o.order_number,
       o.order_status,
-      CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+      (c.first_name || ' ' || c.last_name) as customer_name,
       c.email as customer_email,
       c.phone as customer_phone
      FROM payment_verifications pv
@@ -211,7 +209,7 @@ export const getVerificationById = async (req, res) => {
         pv.*,
         o.order_number,
         o.order_status,
-        CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+        (c.first_name || ' ' || c.last_name) as customer_name,
         c.email as customer_email,
         c.phone as customer_phone
        FROM payment_verifications pv
@@ -358,7 +356,7 @@ export const getVerificationByOrderId = async (req, res) => {
         pv.*,
         o.order_number,
         o.order_status,
-        CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+        (c.first_name || ' ' || c.last_name) as customer_name,
         c.email as customer_email,
         c.phone as customer_phone
        FROM payment_verifications pv
