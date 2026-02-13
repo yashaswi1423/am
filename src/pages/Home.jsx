@@ -114,14 +114,14 @@ const Home = ({ addToCart }) => {
         {/* Full screen image container */}
         <div className="absolute inset-0 top-0">
           <img
-            src="/desktop.PNG"
+            src="/desktop.png"
             alt="Fashion Store"
             className="hidden md:block w-full h-full object-cover object-center animate-zoom-in"
           />
           <img
             src="/mobile.png"
             alt="Fashion Store"
-            className="block md:hidden w-full h-full object-contain object-center bg-gray-900 animate-zoom-in"
+            className="block md:hidden w-full h-full object-cover object-center animate-zoom-in"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"></div>
         </div>
