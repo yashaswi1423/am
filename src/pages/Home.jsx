@@ -107,22 +107,22 @@ const Home = ({ addToCart }) => {
   return (
     <div className="min-h-screen overflow-x-hidden">
       {/* Hero Section */}
-      <div className="relative w-full h-screen overflow-hidden bg-gray-900">
-        <div className="absolute inset-0">
+      <div className="relative w-full min-h-screen pt-20 overflow-hidden bg-gray-900">
+        <div className="absolute inset-0 top-20">
           <img
             src="/desktop.PNG"
             alt="Fashion Store"
-            className="hidden md:block w-full h-full object-cover object-center animate-zoom-in"
+            className="hidden md:block w-full h-full object-contain object-center animate-zoom-in"
           />
           <img
             src="/mobile.png"
             alt="Fashion Store"
-            className="block md:hidden w-full h-full object-cover object-center animate-zoom-in"
+            className="block md:hidden w-full h-full object-contain object-center animate-zoom-in"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"></div>
         </div>
-        <div className="relative z-10 flex items-center justify-center h-full">
-          <h1 className="text-white text-6xl md:text-8xl font-bold tracking-wider drop-shadow-2xl animate-fade-in-up animate-float px-4 text-center">
+        <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-5rem)] py-8">
+          <h1 className="text-white text-5xl sm:text-6xl md:text-8xl font-bold tracking-wider drop-shadow-2xl animate-fade-in-up animate-float px-4 text-center">
             AM_fashions
           </h1>
         </div>
