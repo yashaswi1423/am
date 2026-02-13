@@ -64,14 +64,19 @@ export const getRevenueData = async (req, res) => {
     const { period = 'daily' } = req.query;
 
     let groupBy = 'DATE(created_at)';
+    let selectPeriod = 'DATE(created_at)';
+    
     if (period === 'monthly') {
-      groupBy = "DATE_FORMAT(created_at, '%Y-%m')";
+      // PostgreSQL compatible
+      groupBy = "TO_CHAR(created_at, 'YYYY-MM')";
+      selectPeriod = "TO_CHAR(created_at, 'YYYY-MM')";
     } else if (period === 'yearly') {
-      groupBy = 'YEAR(created_at)';
+      groupBy = 'EXTRACT(YEAR FROM created_at)';
+      selectPeriod = 'EXTRACT(YEAR FROM created_at)';
     }
 
     const revenueData = await db.getMany(
-      `SELECT ${groupBy} as period, SUM(total_amount) as revenue 
+      `SELECT ${selectPeriod} as period, SUM(total_amount) as revenue 
        FROM orders 
        WHERE order_status = ? 
        GROUP BY ${groupBy} 
@@ -116,12 +121,12 @@ export const getTopCustomers = async (req, res) => {
     const { limit = 10 } = req.query;
 
     const topCustomers = await db.getMany(
-      `SELECT c.customer_id, CONCAT(c.first_name, ' ', c.last_name) as name, c.email,
+      `SELECT c.customer_id, (c.first_name || ' ' || c.last_name) as name, c.email,
               COUNT(o.order_id) as order_count,
               SUM(o.total_amount) as total_spent
        FROM customers c
        INNER JOIN orders o ON c.customer_id = o.customer_id
-       GROUP BY c.customer_id
+       GROUP BY c.customer_id, c.first_name, c.last_name, c.email
        ORDER BY total_spent DESC
        LIMIT ?`,
       [parseInt(limit)]
@@ -153,13 +158,13 @@ export const getMonthlyTrends = async (req, res) => {
   try {
     const monthlyTrends = await db.getMany(
       `SELECT 
-         DATE_FORMAT(created_at, '%Y-%m') as month,
+         TO_CHAR(created_at, 'YYYY-MM') as month,
          COUNT(*) as orders,
          SUM(total_amount) as revenue,
          AVG(total_amount) as avg_order_value
        FROM orders
-       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-       GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+       WHERE created_at >= NOW() - INTERVAL '12 months'
+       GROUP BY TO_CHAR(created_at, 'YYYY-MM')
        ORDER BY month DESC`
     );
 

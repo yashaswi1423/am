@@ -47,7 +47,7 @@ export const getRecentOrders = async (req, res) => {
     const { limit = 10 } = req.query;
 
     const recentOrders = await db.getMany(
-      `SELECT o.*, CONCAT(c.first_name, ' ', c.last_name) as customer_name, c.email as customer_email
+      `SELECT o.*, (c.first_name || ' ' || c.last_name) as customer_name, c.email as customer_email
        FROM orders o
        LEFT JOIN customers c ON o.customer_id = c.customer_id
        ORDER BY o.created_at DESC
@@ -108,7 +108,7 @@ export const getRevenueChart = async (req, res) => {
          COALESCE(SUM(total_amount), 0) as revenue,
          COUNT(*) as orders
        FROM orders
-       WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+       WHERE created_at >= NOW() - INTERVAL '? days'
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
       [parseInt(days)]
