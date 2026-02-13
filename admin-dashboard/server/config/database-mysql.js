@@ -15,7 +15,7 @@ if (usePostgres) {
   db = postgresDb;
 } else {
   console.log('🗄️  Using MySQL database (Local)');
-  const { default: mysqlDb } = await import('./database-mysql.js');
+  const { default: mysqlDb } = await import('./database.js');
   db = mysqlDb;
 }
 

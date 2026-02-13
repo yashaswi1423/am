@@ -78,10 +78,11 @@ export const submitPaymentVerification = async (req, res) => {
     }
 
     // Insert verification record with Supabase URL
-    const verification_id = await db.insert(
+    const result = await db.insert(
       `INSERT INTO payment_verifications 
        (order_id, transaction_id, payment_method, payment_amount, screenshot_path, screenshot_filename, screenshot_url, customer_name, customer_email, customer_phone, verification_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
+       RETURNING verification_id
       `,
       [
         order_id,
@@ -96,6 +97,8 @@ export const submitPaymentVerification = async (req, res) => {
         customer_phone || null
       ]
     );
+
+    const verification_id = result.verification_id;
 
     res.status(201).json({
       success: true,
