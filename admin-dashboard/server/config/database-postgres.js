@@ -13,8 +13,8 @@ const getPool = () => {
       ssl: {
         rejectUnauthorized: false
       },
-      max: 1, // Minimal for serverless
-      idleTimeoutMillis: 10000,
+      max: 10,
+      idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
     });
     
@@ -42,11 +42,25 @@ const testConnection = async () => {
   }
 };
 
-// Execute a query with error handling
+// Helper function to convert MySQL ? placeholders to PostgreSQL $1, $2, etc.
+const convertPlaceholders = (sql) => {
+  let paramIndex = 1;
+  return sql.replace(/\?/g, () => `$${paramIndex++}`);
+};
+
+// Query function for direct access with automatic parameter conversion
+const query = async (sql, params = []) => {
+  const currentPool = getPool();
+  const convertedSql = convertPlaceholders(sql);
+  return currentPool.query(convertedSql, params);
+};
+
+// Execute a query with error handling and automatic parameter conversion
 const executeQuery = async (sql, params = []) => {
   try {
     const currentPool = getPool();
-    const result = await currentPool.query(sql, params);
+    const convertedSql = convertPlaceholders(sql);
+    const result = await currentPool.query(convertedSql, params);
     return result.rows;
   } catch (error) {
     console.error('Query execution error:', error.message);
@@ -54,11 +68,12 @@ const executeQuery = async (sql, params = []) => {
   }
 };
 
-// Get a single row
+// Get a single row with automatic parameter conversion
 const getOne = async (sql, params = []) => {
   try {
     const currentPool = getPool();
-    const result = await currentPool.query(sql, params);
+    const convertedSql = convertPlaceholders(sql);
+    const result = await currentPool.query(convertedSql, params);
     return result.rows[0] || null;
   } catch (error) {
     console.error('Query error:', error.message);
@@ -66,11 +81,12 @@ const getOne = async (sql, params = []) => {
   }
 };
 
-// Get multiple rows
+// Get multiple rows with automatic parameter conversion
 const getMany = async (sql, params = []) => {
   try {
     const currentPool = getPool();
-    const result = await currentPool.query(sql, params);
+    const convertedSql = convertPlaceholders(sql);
+    const result = await currentPool.query(convertedSql, params);
     return result.rows;
   } catch (error) {
     console.error('Query error:', error.message);
@@ -78,15 +94,32 @@ const getMany = async (sql, params = []) => {
   }
 };
 
-// Insert a record and return the inserted row
+// Insert a record and return the inserted ID (for MySQL compatibility)
 const insert = async (sql, params = []) => {
   try {
     const currentPool = getPool();
-    const sqlWithReturning = sql.includes('RETURNING') ? sql : sql + ' RETURNING *';
+    const convertedSql = convertPlaceholders(sql);
+    // Add RETURNING clause if not present
+    const sqlWithReturning = convertedSql.includes('RETURNING') 
+      ? convertedSql 
+      : convertedSql.replace(/;?\s*$/, ' RETURNING *;');
+    
     const result = await currentPool.query(sqlWithReturning, params);
-    return result.rows[0];
+    
+    // For MySQL compatibility, return the ID
+    if (result.rows && result.rows.length > 0) {
+      const row = result.rows[0];
+      // Try to find an ID field (common patterns)
+      const idField = Object.keys(row).find(key => 
+        key.endsWith('_id') || key === 'id'
+      );
+      return idField ? row[idField] : row;
+    }
+    return result;
   } catch (error) {
     console.error('Insert error:', error.message);
+    console.error('SQL:', sql);
+    console.error('Params:', params);
     throw error;
   }
 };
@@ -95,7 +128,8 @@ const insert = async (sql, params = []) => {
 const update = async (sql, params = []) => {
   try {
     const currentPool = getPool();
-    const result = await currentPool.query(sql, params);
+    const convertedSql = convertPlaceholders(sql);
+    const result = await currentPool.query(convertedSql, params);
     return result.rowCount;
   } catch (error) {
     console.error('Update error:', error.message);
@@ -107,7 +141,8 @@ const update = async (sql, params = []) => {
 const deleteRecord = async (sql, params = []) => {
   try {
     const currentPool = getPool();
-    const result = await currentPool.query(sql, params);
+    const convertedSql = convertPlaceholders(sql);
+    const result = await currentPool.query(convertedSql, params);
     return result.rowCount;
   } catch (error) {
     console.error('Delete error:', error.message);
@@ -147,12 +182,6 @@ const closePool = async () => {
     console.error('Error closing database pool:', error.message);
     throw error;
   }
-};
-
-// Query function for direct access
-const query = async (sql, params = []) => {
-  const currentPool = getPool();
-  return currentPool.query(sql, params);
 };
 
 export default {
