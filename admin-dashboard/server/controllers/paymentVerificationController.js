@@ -31,6 +31,10 @@ export const uploadMiddleware = upload.single('screenshot');
 =========================== */
 export const submitPaymentVerification = async (req, res) => {
   try {
+    console.log('Payment verification request received');
+    console.log('Body:', req.body);
+    console.log('File:', req.file ? 'Present' : 'Missing');
+
     const {
       order_id,
       transaction_id,
@@ -43,6 +47,7 @@ export const submitPaymentVerification = async (req, res) => {
 
     // Validate required fields
     if (!order_id || !transaction_id || !payment_amount || !customer_name || !customer_email) {
+      console.error('Missing required fields:', { order_id, transaction_id, payment_amount, customer_name, customer_email });
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
@@ -51,12 +56,14 @@ export const submitPaymentVerification = async (req, res) => {
 
     // Check if file was uploaded
     if (!req.file) {
+      console.error('No file uploaded');
       return res.status(400).json({
         success: false,
         message: 'Payment screenshot is required'
       });
     }
 
+    console.log('Uploading file to Supabase...');
     // Generate unique filename
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const fileName = 'payment-' + uniqueSuffix + path.extname(req.file.originalname);
@@ -69,6 +76,7 @@ export const submitPaymentVerification = async (req, res) => {
         fileName,
         req.file.mimetype
       );
+      console.log('File uploaded successfully:', uploadResult);
     } catch (uploadError) {
       console.error('File upload error:', uploadError);
       return res.status(500).json({
@@ -77,6 +85,7 @@ export const submitPaymentVerification = async (req, res) => {
       });
     }
 
+    console.log('Inserting verification record...');
     // Insert verification record with Supabase URL
     const verificationId = await db.insert(
       `INSERT INTO payment_verifications 
@@ -97,6 +106,8 @@ export const submitPaymentVerification = async (req, res) => {
       ]
     );
 
+    console.log('Verification record inserted:', verificationId);
+
     res.status(201).json({
       success: true,
       message: 'Payment verification submitted successfully',
@@ -110,6 +121,7 @@ export const submitPaymentVerification = async (req, res) => {
     });
   } catch (error) {
     console.error('Submit payment verification error:', error);
+    console.error('Error stack:', error.stack);
     
     res.status(500).json({
       success: false,
