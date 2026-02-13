@@ -126,9 +126,8 @@ const Cart = ({ cartItems, removeFromCart, updateQuantity }) => {
       formData.append('customer_phone', addressForm.phone);
       formData.append('screenshot', paymentData.screenshot);
 
-      const API_URL = process.env.NODE_ENV === 'production' 
-        ? '/api'  // Relative URL - will be proxied by Vercel
-        : (process.env.REACT_APP_API_URL || 'http://localhost:5000/api');
+      // Use the actual backend URL from environment variable or default to the deployed backend
+      const API_URL = process.env.REACT_APP_API_URL || 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api';
       const verificationResponse = await fetch(`${API_URL}/payment-verification/submit`, {
         method: 'POST',
         body: formData

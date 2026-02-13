@@ -1,111 +1,96 @@
-# VERCEL CORS FIX - CRITICAL STEPS
+# VERCEL API CONNECTION FIX - SOLVED ✓
 
-## The Problem
-CORS errors are blocking API requests from your frontend (www.am-fashions.in) to your backend (am-git-main-yashaswis-projects-bedecf50.vercel.app).
+## The ACTUAL Problem (Not CORS!)
+The frontend was using **relative URLs** (`/api`) which only work when frontend and backend are on the same domain. Since your frontend (www.am-fashions.in) and backend (am-git-main-yashaswis-projects-bedecf50.vercel.app) are deployed separately, the API calls were failing with 500 errors.
 
-## Solution: Configure Vercel Project Settings
+## The Solution
+Updated the frontend to use **absolute URLs** pointing to your backend domain.
 
-### Step 1: Go to Vercel Dashboard
-1. Open https://vercel.com/dashboard
-2. Find your backend project (the one with URL: am-git-main-yashaswis-projects-bedecf50.vercel.app)
-3. Click on the project
+## Files Changed
 
-### Step 2: Check Environment Variables
-Go to Settings → Environment Variables and ensure these are set:
+1. **am/src/services/api.js** - Updated API base URL
+2. **am/src/pages/Cart.jsx** - Updated payment verification URL
+3. **am/.env.production** - Added backend URL environment variable
 
-**Required Variables:**
+## Quick Deploy Steps
+
+### Step 1: Push Changes to Git
+```bash
+cd am
+git add .
+git commit -m "Fix: Connect frontend to backend API"
+git push
 ```
-DATABASE_URL=postgresql://neondb_owner:npg_IhX52JDTHdjM@ep-curly-dust-aimzducq-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_anon_key
-NODE_ENV=production
-PORT=5000
-```
 
-### Step 3: Redeploy from Vercel Dashboard
+### Step 2: Add Environment Variable on Vercel
+1. Go to Vercel Dashboard → Your Frontend Project (www.am-fashions.in)
+2. Settings → Environment Variables
+3. Add new variable:
+   - **Name**: `REACT_APP_API_URL`
+   - **Value**: `https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api`
+4. Save
+
+### Step 3: Redeploy Frontend
 1. Go to Deployments tab
-2. Click on the latest deployment
-3. Click the three dots (•••) menu
+2. Click latest deployment → Three dots menu → "Redeploy"
+3. **IMPORTANT**: Uncheck "Use existing Build Cache"
 4. Click "Redeploy"
-5. Check "Use existing Build Cache" is UNCHECKED
-6. Click "Redeploy"
 
-### Step 4: Check Deployment Logs
-After redeployment:
-1. Go to the deployment
-2. Click "View Function Logs"
-3. Look for any errors related to CORS or database connection
+### Step 4: Test
+1. Visit www.am-fashions.in
+2. Add items to cart
+3. Fill address and proceed to payment
+4. Submit payment - should work now! ✓
 
-### Step 5: Test the API Directly
-Open this URL in your browser:
+## What Was Wrong?
+
+**Before:**
+```javascript
+// This tried to call www.am-fashions.in/api (doesn't exist!)
+const API_URL = '/api';
 ```
-https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api/health
+
+**After:**
+```javascript
+// This correctly calls your backend
+const API_URL = 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api';
 ```
 
-You should see:
+
+## Optional: Use Custom Domain for Backend (Recommended)
+
+For a cleaner setup, you can add a custom subdomain for your backend:
+
+1. Add `api.am-fashions.in` as a domain to your backend project
+2. Update environment variable to `https://api.am-fashions.in/api`
+3. Redeploy frontend
+
+This makes your setup more professional and easier to manage.
+
+## Troubleshooting
+
+If you still see errors after deploying:
+
+1. **Check browser console** - Look for the actual error message
+2. **Verify environment variable** - Make sure `REACT_APP_API_URL` is set in Vercel
+3. **Test backend directly** - Visit `https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api/health`
+4. **Clear cache** - Hard refresh your browser (Ctrl+Shift+R)
+
+## Backend Health Check
+
+Test if your backend is working:
+```bash
+curl https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api/health
+```
+
+Should return:
 ```json
 {
   "status": "OK",
-  "timestamp": "...",
+  "timestamp": "2026-02-13T...",
   "database": "Connected"
 }
 ```
 
-If you see an authentication page or error, the project might have password protection enabled.
+If this fails, check your backend environment variables (DATABASE_URL, SUPABASE_URL, etc.)
 
-### Step 6: Remove Password Protection (if enabled)
-1. Go to Settings → Deployment Protection
-2. If "Vercel Authentication" is enabled, disable it
-3. Save changes
-4. Redeploy
-
-### Step 7: Verify CORS Headers
-Open browser console and run:
-```javascript
-fetch('https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api/health', {
-  method: 'OPTIONS'
-}).then(r => {
-  console.log('CORS Headers:', r.headers.get('access-control-allow-origin'));
-});
-```
-
-Should log: `*` or your frontend domain
-
-## Alternative Solution: Use Vercel's Built-in CORS
-
-If the above doesn't work, we need to configure CORS at the Vercel platform level:
-
-1. In your backend project root, ensure `vercel.json` has:
-```json
-{
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
-      ]
-    }
-  ]
-}
-```
-
-2. Commit and push changes
-3. Vercel will auto-deploy
-
-## Last Resort: Contact Vercel Support
-
-If none of the above works, there might be a Vercel account-level restriction. Contact Vercel support with:
-- Your project URL
-- The CORS error message
-- Request help configuring CORS for serverless functions
-
-## Quick Test Command
-
-Run this in your terminal to test if backend is accessible:
-```bash
-curl -X OPTIONS https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api/customers -H "Origin: https://www.am-fashions.in" -v
-```
-
-Look for `Access-Control-Allow-Origin` in the response headers.
