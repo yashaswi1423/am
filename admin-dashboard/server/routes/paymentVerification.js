@@ -16,7 +16,17 @@ import {
 const router = express.Router();
 
 // Public routes (for customers)
-router.post('/submit', uploadMiddleware, submitPaymentVerification);
+router.post('/submit', (req, res, next) => {
+  // Explicit CORS for this critical endpoint
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+}, uploadMiddleware, submitPaymentVerification);
+
 router.get('/order/:orderId', getVerificationByOrderId);
 
 // Admin routes (should be protected with auth middleware in production)
