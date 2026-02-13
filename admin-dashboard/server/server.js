@@ -15,17 +15,33 @@ const app = express();
 // CORS CONFIGURATION - MUST BE FIRST
 // ============================================
 
-// Configure CORS properly
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+// Configure CORS properly - allow all origins
+const corsOptions = {
+  origin: true, // Reflect request origin
   credentials: false,
-  optionsSuccessStatus: 200
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
+};
 
-// Explicit OPTIONS handler for all routes
-app.options('*', cors());
+app.use(cors(corsOptions));
+
+// Handle preflight for all routes
+app.options('*', cors(corsOptions));
+
+// Additional CORS headers as fallback
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
 // ============================================
 // MIDDLEWARE CONFIGURATION
