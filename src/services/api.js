@@ -1,8 +1,8 @@
 // API Service for communicating with backend
 import axios from 'axios';
 
-// Use the actual backend URL from environment variable or default to the deployed backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api';
+// Hardcoded backend URL - no environment variable needed
+const API_BASE_URL = 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
