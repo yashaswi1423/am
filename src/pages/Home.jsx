@@ -108,8 +108,8 @@ const Home = ({ addToCart }) => {
     <div className="min-h-screen overflow-x-hidden">
       {/* Hero Section */}
       <div className="relative w-full h-screen overflow-hidden bg-gray-900">
-        {/* Navbar spacer - pushes content down */}
-        <div className="h-20"></div>
+        {/* Navbar spacer - smaller height */}
+        <div className="h-14"></div>
         
         {/* Full screen image container */}
         <div className="absolute inset-0 top-0">
@@ -127,7 +127,7 @@ const Home = ({ addToCart }) => {
         </div>
         
         {/* Content overlay - positioned to avoid navbar */}
-        <div className="relative z-10 flex items-center justify-center h-[calc(100vh-5rem)] mt-20">
+        <div className="relative z-10 flex items-center justify-center h-[calc(100vh-3.5rem)] mt-14">
           <h1 className="text-white text-4xl sm:text-5xl md:text-8xl font-bold tracking-wider drop-shadow-2xl animate-fade-in-up animate-float px-4 text-center leading-tight">
             AM_fashions
           </h1>
