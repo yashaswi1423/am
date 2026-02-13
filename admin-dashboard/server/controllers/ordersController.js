@@ -18,7 +18,7 @@ export const getAllOrders = async (req, res) => {
         o.shipping_address,
         o.created_at,
         o.updated_at,
-        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+        (c.first_name || ' ' || c.last_name) AS customer_name,
         c.email AS customer_email
        FROM orders o
        LEFT JOIN customers c ON o.customer_id = c.customer_id
@@ -40,7 +40,7 @@ export const getOrderById = async (req, res) => {
     const order = await db.getOne(
       `SELECT 
         o.*,
-        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+        (c.first_name || ' ' || c.last_name) AS customer_name,
         c.email AS customer_email,
         c.phone AS customer_phone
        FROM orders o
