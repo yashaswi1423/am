@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
@@ -8,9 +8,39 @@ import Inventory from './pages/Inventory'
 import Customers from './pages/Customers'
 import Analytics from './pages/Analytics'
 import PaymentVerifications from './pages/PaymentVerifications'
+import Login from './pages/Login'
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [adminUsername, setAdminUsername] = useState('')
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken')
+    const username = localStorage.getItem('adminUsername')
+    if (token && username) {
+      setIsAuthenticated(true)
+      setAdminUsername(username)
+    }
+  }, [])
+
+  const handleLogin = (username) => {
+    setIsAuthenticated(true)
+    setAdminUsername(username)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminUsername')
+    setIsAuthenticated(false)
+    setAdminUsername('')
+  }
+
+  // If not authenticated, show login page
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />
+  }
 
   return (
     <div className="flex h-screen bg-main overflow-hidden">
@@ -40,11 +70,21 @@ function App() {
               Admin Dashboard
             </h1>
             
-            {/* Right side placeholder for future user menu */}
-            <div className="w-10 h-10 glass-button rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+            {/* User menu with logout */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-secondary hidden md:block">
+                {adminUsername}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="glass-button px-4 py-2 rounded-lg text-secondary hover:text-red-500 transition-all flex items-center gap-2"
+                title="Logout"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="hidden md:inline">Logout</span>
+              </button>
             </div>
           </div>
         </header>
