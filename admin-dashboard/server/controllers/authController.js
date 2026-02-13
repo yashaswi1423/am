@@ -1,5 +1,5 @@
 // controllers/authController.js
-import db from '../config/database-postgres.js';
+import db from '../config/database.js';
 import { sendLoginApprovalRequest } from '../services/emailService.js';
 import crypto from 'crypto';
 
@@ -36,7 +36,7 @@ export const requestLoginApproval = async (req, res) => {
     const insertQuery = `
       INSERT INTO login_requests 
       (username, request_token, ip_address, user_agent, expires_at, status)
-      VALUES ($1, $2, $3, $4, $5, 'pending')
+      VALUES (?, ?, ?, ?, ?, 'pending')
     `;
     
     try {
@@ -71,27 +71,35 @@ export const requestLoginApproval = async (req, res) => {
     try {
       emailResult = await sendLoginApprovalRequest(requestDetails);
       console.log('📧 Email result:', emailResult);
+      
+      if (!emailResult.success) {
+        console.error('❌ Email failed to send:', emailResult.error);
+        // Still save the request but inform user
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to send approval email. Please check email configuration.',
+          error: emailResult.error
+        });
+      }
     } catch (emailError) {
       console.error('❌ Email service error:', emailError);
-      emailResult = { success: false, error: emailError.message };
+      return res.status(500).json({
+        success: false,
+        message: 'Email service error: ' + emailError.message
+      });
     }
     
-    // Return success even if email fails (for testing/debugging)
-    // In production, you'd want to handle this differently
-    const baseUrl = process.env.API_BASE_URL || process.env.BACKEND_URL || 'https://am-seven-coral.vercel.app';
+    // Return success only if email was sent
+    const baseUrl = process.env.API_BASE_URL || process.env.BACKEND_URL || 'http://localhost:5000';
     const approvalLink = `${baseUrl}/api/auth/approve-login?token=${approvalToken}&action=approve`;
     
-    console.log('✅ Login request saved. Approval link:', approvalLink);
+    console.log('✅ Login request saved and email sent. Approval link:', approvalLink);
     
     res.json({
       success: true,
-      message: emailResult.success 
-        ? 'Approval request sent. Please check your email.'
-        : 'Request saved. Email failed but you can approve manually.',
+      message: 'Approval request sent successfully. Please check your email.',
       requestToken: approvalToken,
-      // Include approval link in response for debugging (remove in production)
-      approvalLink: approvalLink,
-      emailSent: emailResult.success
+      emailSent: true
     });
 
   } catch (error) {
@@ -119,7 +127,7 @@ export const checkApprovalStatus = async (req, res) => {
     const query = `
       SELECT status, expires_at, username
       FROM login_requests
-      WHERE request_token = $1
+      WHERE request_token = ?
     `;
     
     const request = await db.getOne(query, [token]);
@@ -139,7 +147,7 @@ export const checkApprovalStatus = async (req, res) => {
     if (now > expiresAt && request.status === 'pending') {
       // Update status to expired
       await db.update(
-        'UPDATE login_requests SET status = $1 WHERE request_token = $2',
+        'UPDATE login_requests SET status = ? WHERE request_token = ?',
         ['expired', token]
       );
       
@@ -198,7 +206,7 @@ export const handleApprovalAction = async (req, res) => {
     const checkQuery = `
       SELECT status, expires_at, username
       FROM login_requests
-      WHERE request_token = $1
+      WHERE request_token = ?
     `;
     
     const request = await db.getOne(checkQuery, [token]);
@@ -275,8 +283,8 @@ export const handleApprovalAction = async (req, res) => {
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     const updateQuery = `
       UPDATE login_requests
-      SET status = $1, approved_at = NOW(), approved_by = $2
-      WHERE request_token = $3
+      SET status = ?, approved_at = NOW(), approved_by = ?
+      WHERE request_token = ?
     `;
     
     await db.update(updateQuery, [newStatus, 'admin', token]);
@@ -362,3 +370,5 @@ export default {
   checkApprovalStatus,
   handleApprovalAction
 };
+
+

@@ -214,7 +214,14 @@ const PaymentVerifications = () => {
                     <Eye size={18} />
                     Payment Screenshot
                   </h4>
-                  {verification.screenshot_filename ? (
+                  {verification.screenshot_url ? (
+                    <img
+                      src={verification.screenshot_url}
+                      alt="Payment Screenshot"
+                      className="w-full h-64 object-contain bg-dark/50 rounded-lg cursor-pointer hover:scale-105 transition-smooth border border-glass"
+                      onClick={() => window.open(verification.screenshot_url, '_blank')}
+                    />
+                  ) : verification.screenshot_filename ? (
                     <img
                       src={`${API_URL}/payment-verification/screenshot/${verification.screenshot_filename}`}
                       alt="Payment Screenshot"

@@ -110,7 +110,7 @@ const Home = ({ addToCart }) => {
       <div className="relative w-full h-screen overflow-hidden bg-gray-900">
         <div className="absolute inset-0">
           <img
-            src="/desktop.png"
+            src="/desktop.PNG"
             alt="Fashion Store"
             className="hidden md:block w-full h-full object-cover object-center animate-zoom-in"
           />
@@ -229,12 +229,12 @@ const Home = ({ addToCart }) => {
         <h2 className="text-4xl font-bold text-accent text-center mb-12 animate-fade-in-up">
           Explore Our Collection
         </h2>
-        <div className="flex flex-wrap gap-3 justify-center mb-16 animate-fade-in-up stagger-1">
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:flex md:flex-wrap gap-2 md:gap-3 justify-center mb-16 animate-fade-in-up stagger-1">
           <button
             onClick={() => setSelectedCategory('All')}
-            className={`px-6 py-3 rounded-3xl font-medium transition-all duration-500 transform ${
+            className={`px-3 py-2 md:px-6 md:py-3 rounded-2xl md:rounded-3xl text-xs md:text-base font-medium transition-all duration-500 transform ${
               selectedCategory === 'All'
-                ? 'bg-accent text-white shadow-xl scale-110 ring-4 ring-accent/20'
+                ? 'bg-accent text-white shadow-xl scale-105 md:scale-110 ring-2 md:ring-4 ring-accent/20'
                 : 'bg-card text-gray-700 hover:bg-gray-200 hover:shadow-lg hover:scale-105 hover:-translate-y-1'
             }`}
           >
@@ -244,9 +244,9 @@ const Home = ({ addToCart }) => {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-3 rounded-3xl font-medium transition-all duration-500 transform ${
+              className={`px-3 py-2 md:px-6 md:py-3 rounded-2xl md:rounded-3xl text-xs md:text-base font-medium transition-all duration-500 transform ${
                 selectedCategory === category
-                  ? 'bg-accent text-white shadow-xl scale-110 ring-4 ring-accent/20'
+                  ? 'bg-accent text-white shadow-xl scale-105 md:scale-110 ring-2 md:ring-4 ring-accent/20'
                   : 'bg-card text-gray-700 hover:bg-gray-200 hover:shadow-lg hover:scale-105 hover:-translate-y-1'
               }`}
               style={{ animationDelay: `${index * 0.05}s` }}

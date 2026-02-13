@@ -9,13 +9,13 @@ const EMAIL_CONFIG = {
   // Gmail configuration
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || 'madasumiteesh@gmail.com',
-    pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS || 'mnfc xdxe ojpi rtzf'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS
   }
 };
 
 // Admin notification email
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'madasumiteesh@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // Create transporter
 const createTransporter = () => {
@@ -23,6 +23,11 @@ const createTransporter = () => {
     console.log('📧 Creating email transporter...');
     console.log('📧 Email user:', EMAIL_CONFIG.auth.user);
     console.log('📧 Has password:', !!EMAIL_CONFIG.auth.pass);
+    
+    if (!EMAIL_CONFIG.auth.user || !EMAIL_CONFIG.auth.pass) {
+      console.error('❌ Email credentials not configured in .env file');
+      return null;
+    }
     
     const transporter = nodemailer.createTransport(EMAIL_CONFIG);
     console.log('✅ Email transporter created');

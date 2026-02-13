@@ -1,5 +1,5 @@
 // controllers/couponsController.js
-import db from '../config/database-postgres.js';
+import db from '../config/database.js';
 
 // GET /api/coupons
 export const getAllCoupons = async (req, res) => {
@@ -15,7 +15,7 @@ export const getAllCoupons = async (req, res) => {
 export const getCouponById = async (req, res) => {
   try {
     const { id } = req.params;
-    const coupon = await db.getOne('SELECT * FROM coupons WHERE coupon_id = $1', [id]);
+    const coupon = await db.getOne('SELECT * FROM coupons WHERE coupon_id = ?', [id]);
 
     if (!coupon) {
       return res.status(404).json({ success: false, message: 'Coupon not found' });
@@ -38,7 +38,7 @@ export const createCoupon = async (req, res) => {
 
     const newId = await db.insert(
       `INSERT INTO coupons (coupon_code, description, discount_type, discount_value, min_order_value, max_discount, usage_limit, valid_from, valid_until) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING coupon_id`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [coupon_code, description || null, discount_type, discount_value, min_order_value || 0, max_discount || null, usage_limit || null, valid_from, valid_until]
     );
 
@@ -56,8 +56,8 @@ export const updateCoupon = async (req, res) => {
 
     const affectedRows = await db.update(
       `UPDATE coupons 
-       SET coupon_code = $1, description = $2, discount_type = $3, discount_value = $4, min_order_value = $5, max_discount = $6, usage_limit = $7, is_active = $8, valid_from = $9, valid_until = $10
-       WHERE coupon_id = $11`,
+       SET coupon_code = ?, description = ?, discount_type = ?, discount_value = ?, min_order_value = ?, max_discount = ?, usage_limit = ?, is_active = ?, valid_from = ?, valid_until = ?
+       WHERE coupon_id = ?`,
       [coupon_code, description, discount_type, discount_value, min_order_value, max_discount, usage_limit, is_active, valid_from, valid_until, id]
     );
 
@@ -75,7 +75,7 @@ export const updateCoupon = async (req, res) => {
 export const deleteCoupon = async (req, res) => {
   try {
     const { id } = req.params;
-    const affectedRows = await db.deleteRecord('DELETE FROM coupons WHERE coupon_id = $1', [id]);
+    const affectedRows = await db.deleteRecord('DELETE FROM coupons WHERE coupon_id = ?', [id]);
 
     if (affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Coupon not found' });
@@ -96,7 +96,7 @@ export const validateCoupon = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Coupon code is required' });
     }
 
-    const coupon = await db.getOne('SELECT * FROM coupons WHERE coupon_code = $1', [coupon_code]);
+    const coupon = await db.getOne('SELECT * FROM coupons WHERE coupon_code = ?', [coupon_code]);
 
     if (!coupon) {
       return res.status(404).json({ success: false, message: 'Invalid coupon code' });
@@ -151,7 +151,7 @@ export const toggleCouponStatus = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const coupon = await db.getOne('SELECT is_active FROM coupons WHERE coupon_id = $1', [id]);
+    const coupon = await db.getOne('SELECT is_active FROM coupons WHERE coupon_id = ?', [id]);
 
     if (!coupon) {
       return res.status(404).json({ success: false, message: 'Coupon not found' });
@@ -159,7 +159,7 @@ export const toggleCouponStatus = async (req, res) => {
 
     const newStatus = !coupon.is_active;
 
-    await db.update('UPDATE coupons SET is_active = $1 WHERE coupon_id = $2', [newStatus, id]);
+    await db.update('UPDATE coupons SET is_active = ? WHERE coupon_id = ?', [newStatus, id]);
 
     res.json({ success: true, message: `Coupon ${newStatus ? 'activated' : 'deactivated'}`, data: { is_active: newStatus } });
   } catch (error) {
@@ -176,3 +176,5 @@ export default {
   validateCoupon,
   toggleCouponStatus
 };
+
+

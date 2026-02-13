@@ -3,8 +3,6 @@ import { NavLink } from 'react-router-dom'
 import { 
   LayoutDashboard, 
   ShoppingCart, 
-  Package, 
-  Boxes, 
   Users, 
   BarChart3, 
   X,
@@ -16,12 +14,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Orders', path: '/orders', icon: ShoppingCart },
-    { name: 'Products', path: '/products', icon: Package },
-    { name: 'Inventory', path: '/inventory', icon: Boxes },
     { name: 'Customers', path: '/customers', icon: Users },
     { name: 'Payment Verifications', path: '/payment-verifications', icon: CreditCard },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
   ]
+
+  const handleMenuItemClick = () => {
+    // Close sidebar on mobile when a menu item is clicked
+    if (window.innerWidth < 1024) {
+      setIsOpen(false)
+    }
+  }
 
   return (
     <>
@@ -54,6 +57,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={handleMenuItemClick}
               className={({ isActive }) =>
                 `flex items-center space-x-3 px-4 py-3 rounded-lg transition-smooth group ${
                   isActive

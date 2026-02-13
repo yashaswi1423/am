@@ -1,5 +1,5 @@
 // controllers/productsController.js
-import db from '../config/database-postgres.js';
+import db from '../config/database.js';
 
 // GET /api/products
 export const getAllProducts = async (req, res) => {
@@ -15,7 +15,7 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await db.getOne('SELECT * FROM products WHERE product_id = $1', [id]);
+    const product = await db.getOne('SELECT * FROM products WHERE product_id = ?', [id]);
 
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
@@ -37,7 +37,7 @@ export const createProduct = async (req, res) => {
     }
 
     const newId = await db.insert(
-      'INSERT INTO products (product_name, description, category, brand, base_price, discount_percentage, is_featured, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING product_id',
+      'INSERT INTO products (product_name, description, category, brand, base_price, discount_percentage, is_featured, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [product_name, description || null, category, brand || null, base_price, discount_percentage || 0, is_featured || false, image_url || null]
     );
 
@@ -54,7 +54,7 @@ export const updateProduct = async (req, res) => {
     const { product_name, description, category, brand, base_price, discount_percentage, is_active, is_featured, image_url } = req.body;
 
     const affectedRows = await db.update(
-      'UPDATE products SET product_name = $1, description = $2, category = $3, brand = $4, base_price = $5, discount_percentage = $6, is_active = $7, is_featured = $8, image_url = $9 WHERE product_id = $10',
+      'UPDATE products SET product_name = ?, description = ?, category = ?, brand = ?, base_price = ?, discount_percentage = ?, is_active = ?, is_featured = ?, image_url = ? WHERE product_id = ?',
       [product_name, description, category, brand, base_price, discount_percentage, is_active, is_featured, image_url, id]
     );
 
@@ -72,7 +72,7 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const affectedRows = await db.deleteRecord('DELETE FROM products WHERE product_id = $1', [id]);
+    const affectedRows = await db.deleteRecord('DELETE FROM products WHERE product_id = ?', [id]);
 
     if (affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Product not found' });
@@ -96,7 +96,7 @@ export const updateStock = async (req, res) => {
 
     if (variant_id) {
       const affectedRows = await db.update(
-        'UPDATE product_variants SET stock_quantity = $1 WHERE variant_id = $2',
+        'UPDATE product_variants SET stock_quantity = ? WHERE variant_id = ?',
         [stock_quantity, variant_id]
       );
 
@@ -115,7 +115,7 @@ export const updateStock = async (req, res) => {
 export const getProductsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
-    const products = await db.getMany('SELECT * FROM products WHERE category = $1 AND is_active = TRUE', [category]);
+    const products = await db.getMany('SELECT * FROM products WHERE category = ? AND is_active = TRUE', [category]);
 
     res.json({ success: true, data: products });
   } catch (error) {
@@ -133,7 +133,7 @@ export const searchProducts = async (req, res) => {
     }
 
     const products = await db.getMany(
-      'SELECT * FROM products WHERE product_name ILIKE $1 OR description ILIKE $2 OR brand ILIKE $3',
+      'SELECT * FROM products WHERE product_name ILIKE ? OR description ILIKE ? OR brand ILIKE ?',
       [`%${q}%`, `%${q}%`, `%${q}%`]
     );
 
@@ -153,3 +153,5 @@ export default {
   getProductsByCategory,
   searchProducts
 };
+
+

@@ -1,5 +1,5 @@
 // controllers/ordersController.js
-import db from '../config/database-postgres.js';
+import db from '../config/database.js';
 
 /* ===========================
    GET /api/orders
@@ -18,7 +18,7 @@ export const getAllOrders = async (req, res) => {
         o.shipping_address,
         o.created_at,
         o.updated_at,
-        c.first_name || ' ' || c.last_name AS customer_name,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
         c.email AS customer_email
        FROM orders o
        LEFT JOIN customers c ON o.customer_id = c.customer_id
@@ -40,12 +40,12 @@ export const getOrderById = async (req, res) => {
     const order = await db.getOne(
       `SELECT 
         o.*,
-        c.first_name || ' ' || c.last_name AS customer_name,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
         c.email AS customer_email,
         c.phone AS customer_phone
        FROM orders o
        LEFT JOIN customers c ON o.customer_id = c.customer_id
-       WHERE o.order_id = $1`,
+       WHERE o.order_id = ?`,
       [req.params.id]
     );
 
@@ -107,7 +107,7 @@ export const createOrder = async (req, res) => {
         order_number, customer_id, order_status, payment_status, 
         subtotal, discount_amount, tax_amount, shipping_cost, total_amount, 
         shipping_address, billing_address, coupon_code
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING order_id`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderNumber, 
         customer_id, 
@@ -130,7 +130,7 @@ export const createOrder = async (req, res) => {
 
       await db.insert(
         `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
       );
     }
@@ -138,7 +138,7 @@ export const createOrder = async (req, res) => {
     // Create payment record
     await db.insert(
       `INSERT INTO payments (order_id, payment_method, payment_status, amount)
-       VALUES ($1, $2, $3, $4)`,
+       VALUES (?, ?, ?, ?)`,
       [orderId, payment_method, payment_status, calculatedTotal]
     );
 
@@ -168,7 +168,7 @@ export const updateOrderStatus = async (req, res) => {
 
   try {
     const affected = await db.update(
-      'UPDATE orders SET order_status = $1, updated_at = CURRENT_TIMESTAMP WHERE order_id = $2',
+      'UPDATE orders SET order_status = ?, updated_at = CURRENT_TIMESTAMP WHERE order_id = ?',
       [status, req.params.id]
     );
 
@@ -190,13 +190,13 @@ export const deleteOrder = async (req, res) => {
   try {
     // Delete order items first (foreign key constraint)
     await db.deleteRecord(
-      'DELETE FROM order_items WHERE order_id = $1',
+      'DELETE FROM order_items WHERE order_id = ?',
       [req.params.id]
     );
 
     // Delete the order
     const affected = await db.deleteRecord(
-      'DELETE FROM orders WHERE order_id = $1',
+      'DELETE FROM orders WHERE order_id = ?',
       [req.params.id]
     );
 
@@ -210,3 +210,5 @@ export const deleteOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+

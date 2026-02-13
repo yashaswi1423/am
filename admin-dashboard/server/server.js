@@ -5,13 +5,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Import database based on environment
-// Prioritize USE_SUPABASE_CLIENT flag
-const useSupabaseClient = process.env.USE_SUPABASE_CLIENT === 'true';
-const db = useSupabaseClient
-  ? (await import('./config/database-supabase-client.js')).default
-  : (await import('./config/database-postgres.js')).default;
+// Use MySQL database
+const db = (await import('./config/database.js')).default;
 
-console.log(`🗄️  Using ${useSupabaseClient ? 'Supabase Client' : 'PostgreSQL'} database`);
+console.log(`🗄️  Using MySQL database`);
 const app = express();
 
 // ============================================

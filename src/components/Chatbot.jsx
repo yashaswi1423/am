@@ -98,7 +98,7 @@ const Chatbot = () => {
       free: 'Free shipping on orders above ₹2000'
     },
     returns: {
-      policy: '30-day easy return policy',
+      policy: '3-day easy return policy',
       condition: 'Items must be unworn with original tags',
       process: 'Contact us via email or WhatsApp to initiate return'
     },

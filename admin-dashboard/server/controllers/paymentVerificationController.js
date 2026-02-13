@@ -1,24 +1,11 @@
 // controllers/paymentVerificationController.js
-import db from '../config/database-postgres.js';
+import db from '../config/database.js';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
+import { uploadFile, deleteFile, getPublicUrl } from '../services/supabaseStorage.js';
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/payment-screenshots';
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'payment-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for memory storage (we'll upload to Supabase instead of disk)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -70,29 +57,45 @@ export const submitPaymentVerification = async (req, res) => {
       });
     }
 
-    const screenshot_path = req.file.path;
-    const screenshot_filename = req.file.filename;
+    // Generate unique filename
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const fileName = 'payment-' + uniqueSuffix + path.extname(req.file.originalname);
 
-    // Insert verification record
-    const result = await db.query(
+    // Upload to Supabase Storage
+    let uploadResult;
+    try {
+      uploadResult = await uploadFile(
+        req.file.buffer,
+        fileName,
+        req.file.mimetype
+      );
+    } catch (uploadError) {
+      console.error('File upload error:', uploadError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to upload screenshot: ' + uploadError.message
+      });
+    }
+
+    // Insert verification record with Supabase URL
+    const verification_id = await db.insert(
       `INSERT INTO payment_verifications 
-       (order_id, transaction_id, payment_method, payment_amount, screenshot_path, screenshot_filename, customer_name, customer_email, customer_phone, verification_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
-       RETURNING verification_id`,
+       (order_id, transaction_id, payment_method, payment_amount, screenshot_path, screenshot_filename, screenshot_url, customer_name, customer_email, customer_phone, verification_status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+      `,
       [
         order_id,
         transaction_id,
         payment_method || 'upi',
         payment_amount,
-        screenshot_path,
-        screenshot_filename,
+        uploadResult.path,
+        fileName,
+        uploadResult.url,
         customer_name,
         customer_email,
         customer_phone || null
       ]
     );
-
-    const verification_id = result.rows[0].verification_id;
 
     res.status(201).json({
       success: true,
@@ -101,20 +104,12 @@ export const submitPaymentVerification = async (req, res) => {
         verification_id,
         order_id,
         transaction_id,
-        status: 'pending_verification'
+        status: 'pending_verification',
+        screenshot_url: uploadResult.url
       }
     });
   } catch (error) {
     console.error('Submit payment verification error:', error);
-    
-    // Delete uploaded file if database operation failed
-    if (req.file && req.file.path) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (unlinkError) {
-        console.error('Error deleting file:', unlinkError);
-      }
-    }
     
     res.status(500).json({
       success: false,
@@ -130,7 +125,18 @@ export const submitPaymentVerification = async (req, res) => {
 export const getPendingVerifications = async (req, res) => {
   try {
     const verifications = await db.getMany(
-      `SELECT * FROM vw_pending_verifications ORDER BY submitted_at ASC`
+      `SELECT 
+        pv.*,
+        o.order_number,
+        o.order_status,
+        CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+        c.email as customer_email,
+        c.phone as customer_phone
+       FROM payment_verifications pv
+       LEFT JOIN orders o ON pv.order_id = o.order_id
+       LEFT JOIN customers c ON o.customer_id = c.customer_id
+       WHERE pv.verification_status = 'pending'
+       ORDER BY pv.created_at ASC`
     );
 
     res.json({
@@ -155,15 +161,24 @@ export const getAllVerifications = async (req, res) => {
   try {
     const { status, limit = 100, offset = 0 } = req.query;
     
-    let query = `SELECT * FROM vw_all_verifications`;
+    let query = `SELECT 
+      pv.*,
+      o.order_number,
+      o.order_status,
+      CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+      c.email as customer_email,
+      c.phone as customer_phone
+     FROM payment_verifications pv
+     LEFT JOIN orders o ON pv.order_id = o.order_id
+     LEFT JOIN customers c ON o.customer_id = c.customer_id`;
     const params = [];
     
     if (status) {
-      query += ` WHERE verification_status = $1`;
+      query += ` WHERE pv.verification_status = ?`;
       params.push(status);
     }
     
-    query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY pv.created_at DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), parseInt(offset));
 
     const verifications = await db.getMany(query, params);
@@ -189,7 +204,17 @@ export const getAllVerifications = async (req, res) => {
 export const getVerificationById = async (req, res) => {
   try {
     const verification = await db.getOne(
-      `SELECT * FROM vw_all_verifications WHERE verification_id = $1`,
+      `SELECT 
+        pv.*,
+        o.order_number,
+        o.order_status,
+        CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+        c.email as customer_email,
+        c.phone as customer_phone
+       FROM payment_verifications pv
+       LEFT JOIN orders o ON pv.order_id = o.order_id
+       LEFT JOIN customers c ON o.customer_id = c.customer_id
+       WHERE pv.verification_id = ?`,
       [req.params.id]
     );
 
@@ -200,18 +225,9 @@ export const getVerificationById = async (req, res) => {
       });
     }
 
-    // Get verification logs
-    const logs = await db.getMany(
-      `SELECT * FROM payment_verification_logs WHERE verification_id = $1 ORDER BY created_at DESC`,
-      [req.params.id]
-    );
-
     res.json({
       success: true,
-      data: {
-        ...verification,
-        logs
-      }
+      data: verification
     });
   } catch (error) {
     console.error('Get verification by ID error:', error);
@@ -241,8 +257,8 @@ export const verifyPayment = async (req, res) => {
     // Update verification status
     await db.update(
       `UPDATE payment_verifications 
-       SET verification_status = 'verified', verified_at = NOW(), verified_by = $1, admin_notes = $2
-       WHERE verification_id = $3`,
+       SET verification_status = 'verified', verified_at = NOW(), verified_by = ?, admin_notes = ?
+       WHERE verification_id = ?`,
       [admin_id, admin_notes || 'Payment verified', verification_id]
     );
 
@@ -278,8 +294,8 @@ export const rejectPayment = async (req, res) => {
     // Update verification status
     await db.update(
       `UPDATE payment_verifications 
-       SET verification_status = 'rejected', verified_at = NOW(), verified_by = $1, admin_notes = $2
-       WHERE verification_id = $3`,
+       SET verification_status = 'rejected', verified_at = NOW(), verified_by = ?, admin_notes = ?
+       WHERE verification_id = ?`,
       [admin_id, rejection_reason, verification_id]
     );
 
@@ -298,21 +314,27 @@ export const rejectPayment = async (req, res) => {
 
 /* ===========================
    GET /api/payment-verification/screenshot/:filename
-   Serve payment screenshot
+   Get screenshot URL (returns the Supabase URL)
 =========================== */
 export const getScreenshot = async (req, res) => {
   try {
     const filename = req.params.filename;
-    const filepath = path.join('uploads', 'payment-screenshots', filename);
+    
+    // Get verification by filename to get the URL
+    const verification = await db.getOne(
+      `SELECT screenshot_url, screenshot_path FROM payment_verifications WHERE screenshot_filename = ?`,
+      [filename]
+    );
 
-    if (!fs.existsSync(filepath)) {
+    if (!verification || !verification.screenshot_url) {
       return res.status(404).json({
         success: false,
         message: 'Screenshot not found'
       });
     }
 
-    res.sendFile(path.resolve(filepath));
+    // Redirect to Supabase public URL
+    res.redirect(verification.screenshot_url);
   } catch (error) {
     console.error('Get screenshot error:', error);
     res.status(500).json({
@@ -329,7 +351,19 @@ export const getScreenshot = async (req, res) => {
 export const getVerificationByOrderId = async (req, res) => {
   try {
     const verification = await db.getOne(
-      `SELECT * FROM vw_all_verifications WHERE order_id = $1 ORDER BY submitted_at DESC LIMIT 1`,
+      `SELECT 
+        pv.*,
+        o.order_number,
+        o.order_status,
+        CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+        c.email as customer_email,
+        c.phone as customer_phone
+       FROM payment_verifications pv
+       LEFT JOIN orders o ON pv.order_id = o.order_id
+       LEFT JOIN customers c ON o.customer_id = c.customer_id
+       WHERE pv.order_id = ?
+       ORDER BY pv.created_at DESC
+       LIMIT 1`,
       [req.params.orderId]
     );
 

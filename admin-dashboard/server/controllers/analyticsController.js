@@ -1,11 +1,11 @@
 // controllers/analyticsController.js
-import db from '../config/database-postgres.js';
+import db from '../config/database.js';
 
 // GET /api/analytics/overview
 export const getOverview = async (req, res) => {
   try {
     const totalRevenue = await db.getOne(
-      'SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE order_status = $1',
+      'SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE order_status = ?',
       ['delivered']
     );
 
@@ -44,7 +44,7 @@ export const getSalesData = async (req, res) => {
     const params = [];
 
     if (startDate && endDate) {
-      sql += ' WHERE created_at BETWEEN $1 AND $2';
+      sql += ' WHERE created_at BETWEEN ? AND ?';
       params.push(startDate, endDate);
     }
 
@@ -65,15 +65,15 @@ export const getRevenueData = async (req, res) => {
 
     let groupBy = 'DATE(created_at)';
     if (period === 'monthly') {
-      groupBy = "TO_CHAR(created_at, 'YYYY-MM')";
+      groupBy = "DATE_FORMAT(created_at, '%Y-%m')";
     } else if (period === 'yearly') {
-      groupBy = 'EXTRACT(YEAR FROM created_at)';
+      groupBy = 'YEAR(created_at)';
     }
 
     const revenueData = await db.getMany(
       `SELECT ${groupBy} as period, SUM(total_amount) as revenue 
        FROM orders 
-       WHERE order_status = $1 
+       WHERE order_status = ? 
        GROUP BY ${groupBy} 
        ORDER BY period DESC 
        LIMIT 30`,
@@ -100,7 +100,7 @@ export const getTopProducts = async (req, res) => {
        INNER JOIN order_items oi ON p.product_id = oi.product_id
        GROUP BY p.product_id
        ORDER BY total_sold DESC
-       LIMIT $1`,
+       LIMIT ?`,
       [parseInt(limit)]
     );
 
@@ -116,14 +116,14 @@ export const getTopCustomers = async (req, res) => {
     const { limit = 10 } = req.query;
 
     const topCustomers = await db.getMany(
-      `SELECT c.customer_id, c.first_name || ' ' || c.last_name as name, c.email,
+      `SELECT c.customer_id, CONCAT(c.first_name, ' ', c.last_name) as name, c.email,
               COUNT(o.order_id) as order_count,
               SUM(o.total_amount) as total_spent
        FROM customers c
        INNER JOIN orders o ON c.customer_id = o.customer_id
        GROUP BY c.customer_id
        ORDER BY total_spent DESC
-       LIMIT $1`,
+       LIMIT ?`,
       [parseInt(limit)]
     );
 
@@ -153,13 +153,13 @@ export const getMonthlyTrends = async (req, res) => {
   try {
     const monthlyTrends = await db.getMany(
       `SELECT 
-         TO_CHAR(created_at, 'YYYY-MM') as month,
+         DATE_FORMAT(created_at, '%Y-%m') as month,
          COUNT(*) as orders,
          SUM(total_amount) as revenue,
          AVG(total_amount) as avg_order_value
        FROM orders
-       WHERE created_at >= NOW() - INTERVAL '12 months'
-       GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+       GROUP BY DATE_FORMAT(created_at, '%Y-%m')
        ORDER BY month DESC`
     );
 
@@ -178,3 +178,5 @@ export default {
   getOrdersByStatus,
   getMonthlyTrends
 };
+
+

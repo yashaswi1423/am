@@ -135,48 +135,6 @@ const Navbar = ({ cartCount }) => {
               >
                 Contact
               </Link>
-              {/* Admin Login - Always show this option */}
-              <div className="border-t border-white/20 pt-4 mt-2">
-                {localStorage.getItem('adminAuth') === 'true' ? (
-                  <>
-                    <a 
-                      href="http://localhost:3001" 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-lg font-medium text-white hover:text-accent transition-all duration-300 transform hover:translate-x-2 hover:scale-105 flex items-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      Admin Dashboard
-                    </a>
-                    <button
-                      onClick={() => {
-                        localStorage.removeItem('adminAuth');
-                        localStorage.removeItem('adminUsername');
-                        setIsMenuOpen(false);
-                        window.location.reload(); // Refresh to update navbar
-                      }}
-                      className="mt-3 text-sm text-red-400 hover:text-red-300 transition-all duration-300 flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <Link 
-                    to="/admin/login" 
-                    className="text-lg font-medium text-white hover:text-accent transition-all duration-300 transform hover:translate-x-2 hover:scale-105 flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Admin Login
-                  </Link>
-                )}
-              </div>
             </div>
           </div>
         </div>

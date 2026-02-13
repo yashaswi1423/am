@@ -1,12 +1,12 @@
 // controllers/dashboardController.js
-import db from '../config/database-postgres.js';
+import db from '../config/database.js';
 
 // GET /api/dashboard/stats
 export const getDashboardStats = async (req, res) => {
   try {
     
     const totalRevenue = await db.getOne(
-      'SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE order_status = $1',
+      'SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE order_status = ?',
       ['delivered']
     );
 
@@ -17,7 +17,7 @@ export const getDashboardStats = async (req, res) => {
     const totalProducts = await db.getOne('SELECT COUNT(*) as total FROM products WHERE is_active = TRUE');
 
     const pendingOrders = await db.getOne(
-      'SELECT COUNT(*) as total FROM orders WHERE order_status = $1',
+      'SELECT COUNT(*) as total FROM orders WHERE order_status = ?',
       ['pending']
     );
 
@@ -47,11 +47,11 @@ export const getRecentOrders = async (req, res) => {
     const { limit = 10 } = req.query;
 
     const recentOrders = await db.getMany(
-      `SELECT o.*, c.first_name || ' ' || c.last_name as customer_name, c.email as customer_email
+      `SELECT o.*, CONCAT(c.first_name, ' ', c.last_name) as customer_name, c.email as customer_email
        FROM orders o
        LEFT JOIN customers c ON o.customer_id = c.customer_id
        ORDER BY o.created_at DESC
-       LIMIT $1`,
+       LIMIT ?`,
       [parseInt(limit)]
     );
 
@@ -67,7 +67,7 @@ export const getRecentCustomers = async (req, res) => {
     const { limit = 10 } = req.query;
 
     const recentCustomers = await db.getMany(
-      'SELECT * FROM customers ORDER BY created_at DESC LIMIT $1',
+      'SELECT * FROM customers ORDER BY created_at DESC LIMIT ?',
       [parseInt(limit)]
     );
 
@@ -86,7 +86,7 @@ export const getLowStockProducts = async (req, res) => {
       `SELECT p.*, pv.variant_id, pv.size, pv.color, pv.stock_quantity 
        FROM products p
        INNER JOIN product_variants pv ON p.product_id = pv.product_id
-       WHERE pv.stock_quantity < $1
+       WHERE pv.stock_quantity < ?
        ORDER BY pv.stock_quantity ASC`,
       [parseInt(threshold)]
     );
@@ -108,9 +108,10 @@ export const getRevenueChart = async (req, res) => {
          COALESCE(SUM(total_amount), 0) as revenue,
          COUNT(*) as orders
        FROM orders
-       WHERE created_at >= NOW() - INTERVAL '${parseInt(days)} days'
+       WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
        GROUP BY DATE(created_at)
-       ORDER BY date ASC`
+       ORDER BY date ASC`,
+      [parseInt(days)]
     );
 
     res.json({ success: true, data: revenueData });
@@ -124,7 +125,7 @@ export const getActivityLog = async (req, res) => {
   try {
     const { limit = 20 } = req.query;
 
-    // Note: activity_log table doesn't exist in schema, returning empty array
+    // Note: activity_log table doesn't exist in schema, array
     res.json({ success: true, data: [] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -139,3 +140,4 @@ export default {
   getRevenueChart,
   getActivityLog
 };
+
