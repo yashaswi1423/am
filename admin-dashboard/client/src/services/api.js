@@ -1,7 +1,9 @@
 import axios from 'axios'
 
-// Hardcoded API URL - points to the main backend deployment
-const API_BASE_URL = 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api'
+// API URL - uses environment variable or falls back to production
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api'
+
+console.log('Admin Dashboard API URL:', API_BASE_URL)
 
 const api = axios.create({
   baseURL: API_BASE_URL,
