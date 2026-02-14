@@ -65,11 +65,11 @@ const Chatbot = () => {
       details: 'Limited time offer on exclusive collections!'
     },
     contact: {
-      email: 'contact@amfashions.com',
-      whatsapp: '+1234567890',
-      location: 'Fashion District, Style Avenue',
+      email: 'madasumiteesh@gmail.com',
+      whatsapp: '+919100911697',
+      location: 'Anantapur, Andhra Pradesh 515001',
       socialMedia: {
-        instagram: 'https://instagram.com/am_fashions',
+        instagram: 'https://www.instagram.com/am_fashions.official?igsh=MWU5a3F2eXprYW8ybQ==',
         facebook: 'https://facebook.com/am_fashions'
       }
     },
