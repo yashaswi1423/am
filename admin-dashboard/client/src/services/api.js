@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+// Hardcoded API URL - points to the main backend deployment
+const API_BASE_URL = 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
