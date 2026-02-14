@@ -11,27 +11,12 @@ const categories = [
 
 const Home = ({ addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [currentImageIndex, setCurrentImageIndex] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate();
 
   const filteredProducts = selectedCategory === 'All'
     ? products
     : products.filter(product => product.category === selectedCategory);
-
-  const handleNextImage = (productId, totalImages) => {
-    setCurrentImageIndex(prev => ({
-      ...prev,
-      [productId]: ((prev[productId] || 0) + 1) % totalImages
-    }));
-  };
-
-  const handlePrevImage = (productId, totalImages) => {
-    setCurrentImageIndex(prev => ({
-      ...prev,
-      [productId]: ((prev[productId] || 0) - 1 + totalImages) % totalImages
-    }));
-  };
 
   const offerImages = [
     "/WhatsApp Image 2026-02-04 at 8.58.32 AM.jpeg",
@@ -247,60 +232,30 @@ const Home = ({ addToCart }) => {
               {/* Product Image */}
               <div className="relative overflow-hidden aspect-[3/4] bg-gray-100">
                 <img
-                  src={product.images ? product.images[currentImageIndex[product.id] || 0] : product.image}
+                  src={product.images ? product.images[0] : product.image}
                   alt={product.name}
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
-                {/* Image Navigation Arrows - Desktop Only */}
+                {/* Preview Icon - Always visible, static */}
+                <div className="absolute top-2 right-2 md:top-3 md:right-3">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300">
+                    <svg className="w-4 h-4 md:w-5 md:h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* Multiple Images Indicator Badge */}
                 {product.images && product.images.length > 1 && (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePrevImage(product.id, product.images.length);
-                      }}
-                      className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white hover:scale-110 transition-all duration-300 z-10 shadow-lg"
-                      aria-label="Previous image"
-                    >
-                      <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNextImage(product.id, product.images.length);
-                      }}
-                      className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white hover:scale-110 transition-all duration-300 z-10 shadow-lg"
-                      aria-label="Next image"
-                    >
-                      <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                    
-                    {/* Image Indicators */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                      {product.images.map((_, imgIndex) => (
-                        <button
-                          key={imgIndex}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentImageIndex(prev => ({ ...prev, [product.id]: imgIndex }));
-                          }}
-                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                            (currentImageIndex[product.id] || 0) === imgIndex
-                              ? 'bg-white w-6'
-                              : 'bg-white/50 hover:bg-white/75'
-                          }`}
-                          aria-label={`View image ${imgIndex + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </>
+                  <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>{product.images.length}</span>
+                  </div>
                 )}
               </div>
 

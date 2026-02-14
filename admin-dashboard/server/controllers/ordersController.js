@@ -18,7 +18,7 @@ export const getAllOrders = async (req, res) => {
         o.shipping_address,
         o.created_at,
         o.updated_at,
-        (c.first_name || ' ' || c.last_name) AS customer_name,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
         c.email AS customer_email,
         c.phone AS customer_phone,
         COUNT(oi.order_item_id) as item_count
@@ -41,9 +41,6 @@ export const getAllOrders = async (req, res) => {
 /* ===========================
    GET /api/orders/:id
 =========================== */
-/* ===========================
-   GET /api/orders/:id
-=========================== */
 export const getOrderById = async (req, res) => {
   try {
     console.log('=== GET ORDER BY ID ===');
@@ -52,7 +49,7 @@ export const getOrderById = async (req, res) => {
     const order = await db.getOne(
       `SELECT 
         o.*,
-        (c.first_name || ' ' || c.last_name) AS customer_name,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
         c.email AS customer_email,
         c.phone AS customer_phone
        FROM orders o
