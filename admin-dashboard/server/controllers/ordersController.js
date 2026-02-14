@@ -43,6 +43,7 @@ export const getAllOrders = async (req, res) => {
 =========================== */
 export const getOrderById = async (req, res) => {
   try {
+    console.log('=== GET ORDER BY ID ===');
     console.log('Fetching order with ID:', req.params.id);
     
     const order = await db.getOne(
@@ -62,30 +63,46 @@ export const getOrderById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    console.log('Order found:', order.order_number);
+    console.log('Order found:', {
+      order_id: order.order_id,
+      order_number: order.order_number,
+      customer_name: order.customer_name
+    });
 
     // Fetch order items
-    console.log('Fetching order items for order_id:', req.params.id);
+    console.log('Fetching order items for order_id:', order.order_id);
     const orderItems = await db.getMany(
       `SELECT 
-        oi.*,
+        oi.order_item_id,
+        oi.order_id,
+        oi.product_id,
+        oi.variant_id,
+        oi.product_name,
+        oi.variant_details,
+        oi.quantity,
+        oi.unit_price,
+        oi.subtotal,
+        oi.created_at,
         p.product_name as original_product_name,
         p.image_url
        FROM order_items oi
        LEFT JOIN products p ON oi.product_id = p.product_id
        WHERE oi.order_id = ?`,
-      [req.params.id]
+      [order.order_id]
     );
 
-    console.log('Order items found:', orderItems.length, 'items');
-    console.log('Order items data:', JSON.stringify(orderItems, null, 2));
+    console.log('Order items query result:', {
+      count: orderItems.length,
+      items: orderItems
+    });
 
     order.items = orderItems;
 
-    console.log('Sending response with', order.items.length, 'items');
+    console.log('Sending response with', order.items ? order.items.length : 0, 'items');
     res.json({ success: true, data: order });
   } catch (error) {
     console.error('Get order by ID error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -155,15 +172,29 @@ export const createOrder = async (req, res) => {
     );
 
     // Insert order items
+    console.log('Inserting order items for order_id:', orderId);
     for (const item of items) {
       const itemSubtotal = item.subtotal || (item.unit_price * item.quantity);
+      
+      console.log('Inserting item:', {
+        order_id: orderId,
+        product_name: item.product_name,
+        variant_details: item.variant_details,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        subtotal: itemSubtotal
+      });
 
-      await db.insert(
+      const itemResult = await db.insert(
         `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
       );
+      
+      console.log('Item inserted with result:', itemResult);
     }
+    
+    console.log('All order items inserted successfully');
 
     // Create payment record
     await db.insert(
