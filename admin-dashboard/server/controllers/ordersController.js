@@ -165,7 +165,16 @@ export const createOrder = async (req, res) => {
     const calculatedTotal = total_amount || calculatedSubtotal;
 
     // Create order with all required fields
-    const orderId = await db.insert(
+    console.log('Creating order with data:', {
+      orderNumber,
+      customer_id,
+      order_status,
+      payment_status,
+      calculatedSubtotal,
+      calculatedTotal
+    });
+
+    const orderResult = await db.insert(
       `INSERT INTO orders (
         order_number, customer_id, order_status, payment_status, 
         subtotal, discount_amount, tax_amount, shipping_cost, total_amount, 
@@ -187,12 +196,26 @@ export const createOrder = async (req, res) => {
       ]
     );
 
+    console.log('Order insert result:', orderResult);
+    
+    // Extract order_id from result
+    const orderId = typeof orderResult === 'object' ? orderResult.order_id : orderResult;
+    console.log('Extracted order_id:', orderId);
+
+    if (!orderId) {
+      throw new Error('Failed to get order_id from insert result');
+    }
+
     // Insert order items
-    console.log('Inserting order items for order_id:', orderId);
-    for (const item of items) {
+    console.log('=== INSERTING ORDER ITEMS ===');
+    console.log('Order ID for items:', orderId);
+    console.log('Number of items to insert:', items.length);
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
       const itemSubtotal = item.subtotal || (item.unit_price * item.quantity);
       
-      console.log('Inserting item:', {
+      console.log(`Inserting item ${i + 1}/${items.length}:`, {
         order_id: orderId,
         product_name: item.product_name,
         variant_details: item.variant_details,
@@ -201,16 +224,28 @@ export const createOrder = async (req, res) => {
         subtotal: itemSubtotal
       });
 
-      const itemResult = await db.insert(
-        `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
-      );
-      
-      console.log('Item inserted with result:', itemResult);
+      try {
+        const itemResult = await db.insert(
+          `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
+        );
+        
+        console.log(`Item ${i + 1} inserted successfully:`, itemResult);
+      } catch (itemError) {
+        console.error(`Failed to insert item ${i + 1}:`, itemError);
+        throw itemError;
+      }
     }
     
     console.log('All order items inserted successfully');
+    
+    // Verify items were inserted
+    const insertedItems = await db.getMany(
+      `SELECT * FROM order_items WHERE order_id = ?`,
+      [orderId]
+    );
+    console.log('Verification: Found', insertedItems.length, 'items for order_id', orderId);
 
     // Create payment record
     await db.insert(
