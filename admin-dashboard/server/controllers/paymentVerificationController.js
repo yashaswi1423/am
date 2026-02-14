@@ -288,6 +288,14 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
+    console.log('📋 Verification details:', {
+      id: verification.verification_id,
+      email: verification.customer_email,
+      name: verification.customer_name,
+      orderId: verification.order_id,
+      amount: verification.payment_amount
+    });
+
     // Update verification status
     await db.update(
       `UPDATE payment_verifications 
@@ -297,27 +305,36 @@ export const verifyPayment = async (req, res) => {
     );
 
     // Send payment confirmation email to customer
-    console.log('📧 Sending payment confirmation email...');
-    const emailResult = await sendPaymentConfirmation({
-      customerEmail: verification.customer_email,
-      customerName: verification.customer_name,
-      orderId: verification.order_id,
-      transactionId: verification.transaction_id,
-      paymentAmount: verification.payment_amount,
-      verifiedAt: new Date()
-    });
-
-    if (emailResult.success) {
-      console.log('✅ Payment confirmation email sent successfully');
+    console.log('📧 Preparing to send payment confirmation email...');
+    
+    if (!verification.customer_email) {
+      console.error('❌ Customer email not found in verification record');
     } else {
-      console.error('❌ Failed to send payment confirmation email:', emailResult.error);
-    }
+      console.log('📧 Sending email to:', verification.customer_email);
+      
+      const emailResult = await sendPaymentConfirmation({
+        customerEmail: verification.customer_email,
+        customerName: verification.customer_name || 'Valued Customer',
+        orderId: verification.order_id,
+        transactionId: verification.transaction_id,
+        paymentAmount: verification.payment_amount,
+        verifiedAt: new Date()
+      });
 
-    res.json({
-      success: true,
-      message: 'Payment verified successfully',
-      emailSent: emailResult.success
-    });
+      if (emailResult.success) {
+        console.log('✅ Payment confirmation email sent successfully to:', verification.customer_email);
+      } else {
+        console.error('❌ Failed to send payment confirmation email:', emailResult.error);
+        console.error('❌ Email error details:', emailResult.details);
+      }
+      
+      res.json({
+        success: true,
+        message: 'Payment verified successfully',
+        emailSent: emailResult.success,
+        emailError: emailResult.success ? null : emailResult.error
+      });
+    }
   } catch (error) {
     console.error('Verify payment error:', error);
     res.status(500).json({

@@ -53,7 +53,16 @@ const PaymentVerifications = () => {
       const data = await response.json();
       
       if (data.success) {
-        alert('Payment verified successfully! Order status updated to confirmed.');
+        const emailStatus = data.emailSent 
+          ? '✅ Payment verified and confirmation email sent to customer!' 
+          : '⚠️ Payment verified but email failed to send. Please notify customer manually.';
+        
+        alert(emailStatus);
+        
+        if (!data.emailSent && data.emailError) {
+          console.error('Email error:', data.emailError);
+        }
+        
         setSelectedVerification(null);
         setAdminNotes('');
         fetchVerifications();
