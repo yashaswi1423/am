@@ -22,7 +22,6 @@ const Home = ({ addToCart }) => {
   const [selectedColors, setSelectedColors] = useState({});
   const [currentImageIndex, setCurrentImageIndex] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [modalImageIndex, setModalImageIndex] = useState(0);
   const navigate = useNavigate();
 
   const filteredProducts = selectedCategory === 'All'
