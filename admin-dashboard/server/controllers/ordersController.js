@@ -62,12 +62,17 @@ export const getOrderById = async (req, res) => {
     );
 
     if (!order) {
+      console.log('Order not found');
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
+    console.log('Order found:', order.order_number);
+
     // Fetch order items - simplified query
+    console.log('Fetching order items for order_id:', order.order_id);
     const orderItems = await db.getMany(
       `SELECT 
+        order_item_id,
         product_name,
         variant_details,
         quantity,
@@ -79,6 +84,11 @@ export const getOrderById = async (req, res) => {
     );
 
     console.log(`Found ${orderItems.length} items for order ${order.order_id}`);
+    if (orderItems.length > 0) {
+      console.log('Sample item:', orderItems[0]);
+    } else {
+      console.warn('⚠️ WARNING: No items found for this order!');
+    }
 
     order.items = orderItems;
 
@@ -174,13 +184,25 @@ export const createOrder = async (req, res) => {
       const item = items[i];
       const itemSubtotal = item.subtotal || (item.unit_price * item.quantity);
       
-      console.log(`Item ${i + 1}: ${item.product_name} x${item.quantity}`);
+      console.log(`Item ${i + 1}:`, {
+        product_name: item.product_name,
+        variant_details: item.variant_details,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        subtotal: itemSubtotal
+      });
 
-      await db.insert(
-        `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
-      );
+      try {
+        const itemResult = await db.insert(
+          `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
+        );
+        console.log(`Item ${i + 1} inserted successfully, result:`, itemResult);
+      } catch (itemError) {
+        console.error(`Failed to insert item ${i + 1}:`, itemError);
+        throw itemError;
+      }
     }
     
     console.log('All items inserted successfully');
