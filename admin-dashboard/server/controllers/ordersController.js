@@ -41,9 +41,13 @@ export const getAllOrders = async (req, res) => {
 /* ===========================
    GET /api/orders/:id
 =========================== */
+/* ===========================
+   GET /api/orders/:id
+=========================== */
 export const getOrderById = async (req, res) => {
   try {
     console.log('=== GET ORDER BY ID ===');
+    console.log('Request params:', req.params);
     console.log('Fetching order with ID:', req.params.id);
     
     const order = await db.getOne(
@@ -69,8 +73,14 @@ export const getOrderById = async (req, res) => {
       customer_name: order.customer_name
     });
 
-    // Fetch order items
+    // First, let's check if ANY order items exist in the database
+    const allItems = await db.getMany(`SELECT * FROM order_items LIMIT 10`);
+    console.log('Sample order_items in database:', allItems);
+
+    // Fetch order items for this specific order
     console.log('Fetching order items for order_id:', order.order_id);
+    console.log('Query will be: SELECT * FROM order_items WHERE order_id = ?', [order.order_id]);
+    
     const orderItems = await db.getMany(
       `SELECT 
         oi.order_item_id,
@@ -98,12 +108,18 @@ export const getOrderById = async (req, res) => {
 
     order.items = orderItems;
 
-    console.log('Sending response with', order.items ? order.items.length : 0, 'items');
+    console.log('Final response data:', {
+      order_id: order.order_id,
+      order_number: order.order_number,
+      items_count: order.items ? order.items.length : 0,
+      items: order.items
+    });
+
     res.json({ success: true, data: order });
   } catch (error) {
     console.error('Get order by ID error:', error);
     console.error('Error stack:', error.stack);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.stack });
   }
 };
 
