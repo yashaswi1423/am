@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
+import ProductModal from '../components/ProductModal';
 
 const categories = [
   'T-Shirts', 'Shirts', 'Cargo', 'Shorts', 'Track pants', 'Coats',
@@ -20,6 +21,8 @@ const Home = ({ addToCart }) => {
   const [selectedSizes, setSelectedSizes] = useState({});
   const [selectedColors, setSelectedColors] = useState({});
   const [currentImageIndex, setCurrentImageIndex] = useState({});
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
   const navigate = useNavigate();
 
   const filteredProducts = selectedCategory === 'All'
@@ -114,12 +117,12 @@ const Home = ({ addToCart }) => {
         {/* Full screen image container */}
         <div className="absolute inset-0 top-0">
           <img
-            src="/desktop.png"
+            src="/desktop.jpeg"
             alt="Fashion Store"
             className="hidden md:block w-full h-full object-cover object-center animate-zoom-in"
           />
           <img
-            src="/mobile.png"
+            src="/mobile.jpeg"
             alt="Fashion Store"
             className="block md:hidden w-full h-full object-cover object-center animate-zoom-in"
           />
@@ -264,11 +267,12 @@ const Home = ({ addToCart }) => {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
           {filteredProducts.map((product, index) => (
             <div
               key={product.id}
-              className="bg-card rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-700 group hover-lift animate-fade-in-up hover-shine"
+              onClick={() => setSelectedProduct(product)}
+              className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-700 group hover-lift animate-fade-in-up hover-shine cursor-pointer"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
               <div className="relative overflow-hidden aspect-[3/4] bg-gray-100 group/image">
@@ -335,21 +339,21 @@ const Home = ({ addToCart }) => {
                   {product.images ? `${(currentImageIndex[product.id] || 0) + 1}/${product.images.length}` : 'View'}
                 </div>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-3 md:p-6 space-y-2 md:space-y-4">
                 <div className="transform transition-transform duration-300 group-hover:translate-y-[-2px]">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-accent transition-colors duration-300">{product.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{product.category}</p>
-                  <p className="text-xl font-bold text-accent mt-2 transform transition-all duration-300 group-hover:scale-110 inline-block">₹{product.price}</p>
+                  <h3 className="text-sm md:text-lg font-semibold text-gray-900 group-hover:text-accent transition-colors duration-300 line-clamp-1">{product.name}</h3>
+                  <p className="text-xs md:text-sm text-gray-500 mt-1">{product.category}</p>
+                  <p className="text-lg md:text-xl font-bold text-accent mt-1 md:mt-2 transform transition-all duration-300 group-hover:scale-110 inline-block">₹{product.price}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Color:</p>
-                  <div className="flex gap-2">
+                  <p className="text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Color:</p>
+                  <div className="flex gap-1 md:gap-2">
                     {colors.map(color => (
                       <button
                         key={color.name}
                         onClick={() => setSelectedColors({ ...selectedColors, [product.id]: color.name })}
-                        className={`w-10 h-10 rounded-full font-medium transition-all duration-300 transform hover:scale-110 border-2 ${
+                        className={`w-7 h-7 md:w-10 md:h-10 rounded-full font-medium transition-all duration-300 transform hover:scale-110 border-2 ${
                           (selectedColors[product.id] || colors[0].name) === color.name
                             ? 'border-accent scale-105 ring-2 ring-accent/30'
                             : 'border-gray-300 hover:border-gray-400'
@@ -366,13 +370,13 @@ const Home = ({ addToCart }) => {
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Size:</p>
-                  <div className="flex gap-2">
+                  <p className="text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Size:</p>
+                  <div className="flex gap-1 md:gap-2">
                     {sizes.map(size => (
                       <button
                         key={size}
                         onClick={() => setSelectedSizes({ ...selectedSizes, [product.id]: size })}
-                        className={`w-10 h-10 rounded-xl font-medium transition-all duration-300 transform hover:scale-110 hover:rotate-6 ${
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-xl text-[10px] md:text-base font-medium transition-all duration-300 transform hover:scale-110 hover:rotate-6 ${
                           (selectedSizes[product.id] || 'M') === size
                             ? 'bg-accent text-white shadow-lg scale-105 ring-2 ring-accent/30'
                             : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow-md'
@@ -384,10 +388,10 @@ const Home = ({ addToCart }) => {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-1 md:gap-2">
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="flex-1 bg-white border-2 border-accent text-accent py-3 rounded-2xl font-medium hover:bg-accent hover:text-white transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
+                    className="flex-1 bg-white border-2 border-accent text-accent py-2 md:py-3 rounded-xl md:rounded-2xl text-xs md:text-base font-medium hover:bg-accent hover:text-white transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
                   >
                     <span className="relative z-10">Add to Cart</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/10 to-transparent transform -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
@@ -395,7 +399,7 @@ const Home = ({ addToCart }) => {
                   
                   <button
                     onClick={() => handleBuyNow(product)}
-                    className="flex-1 bg-accent text-white py-3 rounded-2xl font-medium hover:bg-gray-800 transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
+                    className="flex-1 bg-accent text-white py-2 md:py-3 rounded-xl md:rounded-2xl text-xs md:text-base font-medium hover:bg-gray-800 transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
                   >
                     <span className="relative z-10">Buy Now</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
@@ -406,6 +410,29 @@ const Home = ({ addToCart }) => {
           ))}
         </div>
       </div>
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={(productWithOptions) => {
+            addToCart(productWithOptions);
+            setSelectedProduct(null);
+          }}
+          onBuyNow={(productWithOptions) => {
+            addToCart(productWithOptions);
+            setSelectedProduct(null);
+            navigate('/cart');
+            setTimeout(() => {
+              const paymentSection = document.getElementById('payment-section');
+              if (paymentSection) {
+                paymentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 100);
+          }}
+        />
+      )}
     </div>
   );
 };
