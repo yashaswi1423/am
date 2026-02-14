@@ -84,7 +84,9 @@ const Orders = () => {
   const viewOrderDetails = async (orderId) => {
     try {
       const response = await ordersAPI.getById(orderId)
+      console.log('Order details response:', response.data)
       if (response.data.success) {
+        console.log('Order items:', response.data.data.items)
         setSelectedOrder(response.data.data)
         setShowModal(true)
       }
@@ -351,28 +353,47 @@ const Orders = () => {
               </div>
 
               {/* Order Items */}
-              {selectedOrder.items && selectedOrder.items.length > 0 && (
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-gray-900 mb-3 text-lg">📦 Order Items</h3>
+                {selectedOrder.items && selectedOrder.items.length > 0 ? (
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg">
+                      <div key={idx} className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                        <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                          {idx + 1}
+                        </div>
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{item.product_name}</p>
+                          <p className="font-bold text-gray-900 text-lg">{item.product_name}</p>
                           {item.variant_details && (
-                            <p className="text-sm text-gray-600">{item.variant_details}</p>
+                            <p className="text-sm text-gray-700 mt-1 font-medium">
+                              🎨 {item.variant_details}
+                            </p>
                           )}
-                          <div className="flex items-center gap-4 mt-2 text-sm">
-                            <span className="text-gray-600">Qty: {item.quantity}</span>
-                            <span className="text-gray-600">Unit Price: ₹{parseFloat(item.unit_price).toFixed(2)}</span>
-                            <span className="font-semibold text-gray-900">Subtotal: ₹{parseFloat(item.subtotal).toFixed(2)}</span>
+                          <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
+                            <div className="bg-white px-3 py-2 rounded-lg">
+                              <span className="text-gray-500 block text-xs">Quantity</span>
+                              <span className="text-gray-900 font-bold text-lg">{item.quantity}</span>
+                            </div>
+                            <div className="bg-white px-3 py-2 rounded-lg">
+                              <span className="text-gray-500 block text-xs">Unit Price</span>
+                              <span className="text-gray-900 font-bold">₹{parseFloat(item.unit_price).toFixed(2)}</span>
+                            </div>
+                            <div className="bg-white px-3 py-2 rounded-lg">
+                              <span className="text-gray-500 block text-xs">Subtotal</span>
+                              <span className="text-blue-600 font-bold text-lg">₹{parseFloat(item.subtotal).toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                    <p className="text-yellow-800 font-medium">⚠️ No items found for this order</p>
+                    <p className="text-yellow-600 text-sm mt-1">This might be an old order or data sync issue</p>
+                  </div>
+                )}
+              </div>
 
               {/* Order Summary */}
               <div className="border-t pt-4">

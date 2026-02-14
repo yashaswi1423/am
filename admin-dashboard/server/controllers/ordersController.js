@@ -43,6 +43,8 @@ export const getAllOrders = async (req, res) => {
 =========================== */
 export const getOrderById = async (req, res) => {
   try {
+    console.log('Fetching order with ID:', req.params.id);
+    
     const order = await db.getOne(
       `SELECT 
         o.*,
@@ -56,10 +58,14 @@ export const getOrderById = async (req, res) => {
     );
 
     if (!order) {
+      console.log('Order not found:', req.params.id);
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
+    console.log('Order found:', order.order_number);
+
     // Fetch order items
+    console.log('Fetching order items for order_id:', req.params.id);
     const orderItems = await db.getMany(
       `SELECT 
         oi.*,
@@ -71,8 +77,12 @@ export const getOrderById = async (req, res) => {
       [req.params.id]
     );
 
+    console.log('Order items found:', orderItems.length, 'items');
+    console.log('Order items data:', JSON.stringify(orderItems, null, 2));
+
     order.items = orderItems;
 
+    console.log('Sending response with', order.items.length, 'items');
     res.json({ success: true, data: order });
   } catch (error) {
     console.error('Get order by ID error:', error);
