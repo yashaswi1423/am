@@ -104,7 +104,8 @@ export const getOrderById = async (req, res) => {
 =========================== */
 export const createOrder = async (req, res) => {
   try {
-    console.log('Received order request:', JSON.stringify(req.body, null, 2));
+    console.log('=== CREATE ORDER REQUEST ===');
+    console.log('Received order request body:', JSON.stringify(req.body, null, 2));
     
     const { 
       customer_id, 
@@ -122,11 +123,16 @@ export const createOrder = async (req, res) => {
       payment_status = 'pending'
     } = req.body;
 
+    console.log('Extracted items:', items);
+    console.log('Items count:', items ? items.length : 0);
+
     if (!customer_id || !items || items.length === 0) {
+      console.error('Validation failed: Missing customer_id or items');
       return res.status(400).json({ success: false, message: 'Customer and items are required' });
     }
     
     if (!shipping_address) {
+      console.error('Validation failed: Missing shipping_address');
       return res.status(400).json({ success: false, message: 'Shipping address is required' });
     }
 
@@ -143,7 +149,8 @@ export const createOrder = async (req, res) => {
     console.log('Creating order with data:', {
       orderNumber,
       customer_id,
-      items_count: items.length
+      items_count: items.length,
+      calculatedTotal
     });
 
     const orderResult = await db.insert(
@@ -178,7 +185,7 @@ export const createOrder = async (req, res) => {
     }
 
     // Insert order items
-    console.log(`Inserting ${items.length} items for order ${orderId}`);
+    console.log(`=== INSERTING ${items.length} ITEMS FOR ORDER ${orderId} ===`);
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -198,14 +205,15 @@ export const createOrder = async (req, res) => {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
         );
-        console.log(`Item ${i + 1} inserted successfully, result:`, itemResult);
+        console.log(`✅ Item ${i + 1} inserted successfully, result:`, itemResult);
       } catch (itemError) {
-        console.error(`Failed to insert item ${i + 1}:`, itemError);
+        console.error(`❌ Failed to insert item ${i + 1}:`, itemError);
+        console.error('Item data:', item);
         throw itemError;
       }
     }
     
-    console.log('All items inserted successfully');
+    console.log('✅ All items inserted successfully');
 
     // Create payment record
     await db.insert(
@@ -213,6 +221,8 @@ export const createOrder = async (req, res) => {
        VALUES (?, ?, ?, ?)`,
       [orderId, payment_method, payment_status, calculatedTotal]
     );
+
+    console.log('✅ Order creation complete');
 
     res.status(201).json({ 
       success: true, 
@@ -223,7 +233,8 @@ export const createOrder = async (req, res) => {
       message: 'Order created successfully'
     });
   } catch (error) {
-    console.error('Create order error:', error);
+    console.error('❌ Create order error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ success: false, message: error.message });
   }
 };
