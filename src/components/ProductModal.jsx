@@ -38,22 +38,22 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div className="bg-white rounded-2xl md:rounded-3xl max-w-6xl w-full h-[95vh] md:h-[90vh] overflow-hidden shadow-2xl animate-scale-in relative" onClick={(e) => e.stopPropagation()}>
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:rotate-90 transition-all duration-300 shadow-lg"
+          className="absolute top-2 right-2 md:top-4 md:right-4 z-10 w-8 h-8 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:rotate-90 transition-all duration-300 shadow-lg"
         >
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <div className="grid md:grid-cols-2 gap-6 p-6 md:p-8">
+        <div className="grid md:grid-cols-2 gap-3 md:gap-6 p-3 md:p-6 h-full overflow-y-auto">
           {/* Left: Image Gallery */}
-          <div className="space-y-4">
-            <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group">
+          <div className="space-y-2 md:space-y-3 flex flex-col h-full">
+            <div className="relative flex-1 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden group">
               <img
                 src={images[currentImageIndex]}
                 alt={product.name}
@@ -64,17 +64,17 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
                 <>
                   <button
                     onClick={handlePrev}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg"
+                    className="absolute left-1 md:left-2 top-1/2 -translate-y-1/2 w-7 h-7 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg"
                   >
-                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 md:w-6 md:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
                   <button
                     onClick={handleNext}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg"
+                    className="absolute right-1 md:right-2 top-1/2 -translate-y-1/2 w-7 h-7 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg"
                   >
-                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 md:w-6 md:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -84,12 +84,12 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
 
             {/* Thumbnail Gallery */}
             {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
+              <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-1">
                 {images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`flex-shrink-0 w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden border-2 transition-all ${
                       currentImageIndex === idx ? 'border-accent scale-105' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -100,35 +100,38 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
             )}
           </div>
 
-          {/* Right: Product Details */}
-          <div className="space-y-6">
+          {/* Right: Product Details - Compact Single Screen */}
+          <div className="flex flex-col h-full space-y-2 md:space-y-3 overflow-y-auto">
+            {/* Header */}
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h2>
-              <p className="text-gray-500">{product.category}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                    </svg>
-                  ))}
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{product.name}</h2>
+              <div className="flex items-center justify-between">
+                <p className="text-xs md:text-sm text-gray-500">{product.category}</p>
+                <div className="flex items-center gap-1">
+                  <div className="flex text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className="w-3 h-3 md:w-4 md:h-4 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-600">(24)</span>
                 </div>
-                <span className="text-sm text-gray-600">(24 reviews)</span>
               </div>
             </div>
 
-            <div className="text-4xl font-bold text-accent">₹{product.price}</div>
+            <div className="text-2xl md:text-3xl font-bold text-accent">₹{product.price}</div>
 
             {/* Color Selection */}
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-3">Select Color:</p>
-              <div className="flex gap-3">
+              <p className="text-xs md:text-sm font-semibold text-gray-700 mb-1.5">Color:</p>
+              <div className="flex gap-2">
                 {colors.map((color) => (
                   <button
                     key={color.name}
                     onClick={() => setSelectedColor(color.name)}
-                    className={`w-12 h-12 rounded-full border-2 transition-all ${
-                      selectedColor === color.name ? 'border-accent scale-110 ring-4 ring-accent/30' : 'border-gray-300 hover:border-gray-400'
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all ${
+                      selectedColor === color.name ? 'border-accent scale-110 ring-2 md:ring-3 ring-accent/30' : 'border-gray-300 hover:border-gray-400'
                     }`}
                     style={{ backgroundColor: color.value }}
                     title={color.name}
@@ -139,15 +142,15 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
 
             {/* Size Selection */}
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-3">Select Size:</p>
-              <div className="flex gap-2">
+              <p className="text-xs md:text-sm font-semibold text-gray-700 mb-1.5">Size:</p>
+              <div className="flex gap-1.5 md:gap-2">
                 {sizes.map((size) => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`w-12 h-12 rounded-xl font-semibold transition-all ${
+                    className={`w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all ${
                       selectedSize === size
-                        ? 'bg-accent text-white scale-110 ring-4 ring-accent/30'
+                        ? 'bg-accent text-white scale-105 ring-2 md:ring-3 ring-accent/30'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -157,52 +160,50 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            {/* Product Description */}
+            <div className="pt-2 border-t">
+              <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-1">Details</h3>
+              <p className="text-xs md:text-sm text-gray-600 line-clamp-2">
+                Premium quality {product.category.toLowerCase()} made with finest materials. Perfect fit and comfortable wear.
+              </p>
+            </div>
+
+            {/* Reviews - Compact */}
+            <div className="pt-2 border-t flex-1">
+              <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-2">Reviews</h3>
+              <div className="space-y-2">
+                {reviews.slice(0, 2).map((review, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-lg p-2 md:p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs md:text-sm font-semibold text-gray-900">{review.name}</span>
+                      <div className="flex text-yellow-400">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <svg key={i} className="w-3 h-3 fill-current" viewBox="0 0 20 20">
+                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-1">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons - Sticky at bottom */}
+            <div className="flex gap-2 md:gap-3 pt-2 sticky bottom-0 bg-white">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-white border-2 border-accent text-accent py-4 rounded-2xl font-semibold hover:bg-accent hover:text-white transition-all duration-300 active:scale-95"
+                className="flex-1 bg-white border-2 border-accent text-accent py-2.5 md:py-3 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold hover:bg-accent hover:text-white transition-all duration-300 active:scale-95"
               >
                 Add to Cart
               </button>
               <button
                 onClick={handleBuyNow}
-                className="flex-1 bg-accent text-white py-4 rounded-2xl font-semibold hover:bg-gray-800 transition-all duration-300 active:scale-95"
+                className="flex-1 bg-accent text-white py-2.5 md:py-3 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold hover:bg-gray-800 transition-all duration-300 active:scale-95"
               >
                 Buy Now
               </button>
-            </div>
-
-            {/* Product Description */}
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold text-gray-900 mb-2">Product Details</h3>
-              <p className="text-sm text-gray-600">
-                Premium quality {product.category.toLowerCase()} made with finest materials. 
-                Perfect fit and comfortable wear. Available in multiple sizes and colors.
-              </p>
-            </div>
-
-            {/* Reviews */}
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold text-gray-900 mb-4">Customer Reviews</h3>
-              <div className="space-y-4 max-h-60 overflow-y-auto">
-                {reviews.map((review, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-gray-900">{review.name}</span>
-                      <span className="text-xs text-gray-500">{review.date}</span>
-                    </div>
-                    <div className="flex text-yellow-400 mb-2">
-                      {[...Array(review.rating)].map((_, i) => (
-                        <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <p className="text-sm text-gray-600">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>

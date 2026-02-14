@@ -47,7 +47,6 @@ export const getAllOrders = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     console.log('=== GET ORDER BY ID ===');
-    console.log('Request params:', req.params);
     console.log('Fetching order with ID:', req.params.id);
     
     const order = await db.getOne(
@@ -63,63 +62,30 @@ export const getOrderById = async (req, res) => {
     );
 
     if (!order) {
-      console.log('Order not found:', req.params.id);
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    console.log('Order found:', {
-      order_id: order.order_id,
-      order_number: order.order_number,
-      customer_name: order.customer_name
-    });
-
-    // First, let's check if ANY order items exist in the database
-    const allItems = await db.getMany(`SELECT * FROM order_items LIMIT 10`);
-    console.log('Sample order_items in database:', allItems);
-
-    // Fetch order items for this specific order
-    console.log('Fetching order items for order_id:', order.order_id);
-    console.log('Query will be: SELECT * FROM order_items WHERE order_id = ?', [order.order_id]);
-    
+    // Fetch order items - simplified query
     const orderItems = await db.getMany(
       `SELECT 
-        oi.order_item_id,
-        oi.order_id,
-        oi.product_id,
-        oi.variant_id,
-        oi.product_name,
-        oi.variant_details,
-        oi.quantity,
-        oi.unit_price,
-        oi.subtotal,
-        oi.created_at,
-        p.product_name as original_product_name,
-        p.image_url
-       FROM order_items oi
-       LEFT JOIN products p ON oi.product_id = p.product_id
-       WHERE oi.order_id = ?`,
+        product_name,
+        variant_details,
+        quantity,
+        unit_price,
+        subtotal
+       FROM order_items
+       WHERE order_id = ?`,
       [order.order_id]
     );
 
-    console.log('Order items query result:', {
-      count: orderItems.length,
-      items: orderItems
-    });
+    console.log(`Found ${orderItems.length} items for order ${order.order_id}`);
 
     order.items = orderItems;
-
-    console.log('Final response data:', {
-      order_id: order.order_id,
-      order_number: order.order_number,
-      items_count: order.items ? order.items.length : 0,
-      items: order.items
-    });
 
     res.json({ success: true, data: order });
   } catch (error) {
     console.error('Get order by ID error:', error);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ success: false, message: error.message, error: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -164,14 +130,10 @@ export const createOrder = async (req, res) => {
     }
     const calculatedTotal = total_amount || calculatedSubtotal;
 
-    // Create order with all required fields
     console.log('Creating order with data:', {
       orderNumber,
       customer_id,
-      order_status,
-      payment_status,
-      calculatedSubtotal,
-      calculatedTotal
+      items_count: items.length
     });
 
     const orderResult = await db.insert(
@@ -196,56 +158,32 @@ export const createOrder = async (req, res) => {
       ]
     );
 
-    console.log('Order insert result:', orderResult);
+    console.log('Order created, result:', orderResult);
     
-    // Extract order_id from result
     const orderId = typeof orderResult === 'object' ? orderResult.order_id : orderResult;
-    console.log('Extracted order_id:', orderId);
+    console.log('Order ID:', orderId);
 
     if (!orderId) {
-      throw new Error('Failed to get order_id from insert result');
+      throw new Error('Failed to get order_id from insert');
     }
 
     // Insert order items
-    console.log('=== INSERTING ORDER ITEMS ===');
-    console.log('Order ID for items:', orderId);
-    console.log('Number of items to insert:', items.length);
+    console.log(`Inserting ${items.length} items for order ${orderId}`);
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const itemSubtotal = item.subtotal || (item.unit_price * item.quantity);
       
-      console.log(`Inserting item ${i + 1}/${items.length}:`, {
-        order_id: orderId,
-        product_name: item.product_name,
-        variant_details: item.variant_details,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        subtotal: itemSubtotal
-      });
+      console.log(`Item ${i + 1}: ${item.product_name} x${item.quantity}`);
 
-      try {
-        const itemResult = await db.insert(
-          `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
-        );
-        
-        console.log(`Item ${i + 1} inserted successfully:`, itemResult);
-      } catch (itemError) {
-        console.error(`Failed to insert item ${i + 1}:`, itemError);
-        throw itemError;
-      }
+      await db.insert(
+        `INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_details, quantity, unit_price, subtotal)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderId, item.product_id || null, item.variant_id || null, item.product_name, item.variant_details || null, item.quantity, item.unit_price, itemSubtotal]
+      );
     }
     
-    console.log('All order items inserted successfully');
-    
-    // Verify items were inserted
-    const insertedItems = await db.getMany(
-      `SELECT * FROM order_items WHERE order_id = ?`,
-      [orderId]
-    );
-    console.log('Verification: Found', insertedItems.length, 'items for order_id', orderId);
+    console.log('All items inserted successfully');
 
     // Create payment record
     await db.insert(
