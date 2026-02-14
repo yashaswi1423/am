@@ -3,6 +3,7 @@ import db from '../config/database.js';
 import multer from 'multer';
 import path from 'path';
 import { uploadFile, deleteFile, getPublicUrl } from '../services/supabaseStorage.js';
+import { sendPaymentConfirmation } from '../services/emailService.js';
 
 // Configure multer for memory storage (we'll upload to Supabase instead of disk)
 const storage = multer.memoryStorage();
@@ -269,6 +270,24 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
+    // Get verification details before updating
+    const verification = await db.getOne(
+      `SELECT 
+        pv.*,
+        o.order_number
+       FROM payment_verifications pv
+       LEFT JOIN orders o ON pv.order_id = o.order_id
+       WHERE pv.verification_id = ?`,
+      [verification_id]
+    );
+
+    if (!verification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Verification not found'
+      });
+    }
+
     // Update verification status
     await db.update(
       `UPDATE payment_verifications 
@@ -277,9 +296,27 @@ export const verifyPayment = async (req, res) => {
       [admin_id, admin_notes || 'Payment verified', verification_id]
     );
 
+    // Send payment confirmation email to customer
+    console.log('📧 Sending payment confirmation email...');
+    const emailResult = await sendPaymentConfirmation({
+      customerEmail: verification.customer_email,
+      customerName: verification.customer_name,
+      orderId: verification.order_id,
+      transactionId: verification.transaction_id,
+      paymentAmount: verification.payment_amount,
+      verifiedAt: new Date()
+    });
+
+    if (emailResult.success) {
+      console.log('✅ Payment confirmation email sent successfully');
+    } else {
+      console.error('❌ Failed to send payment confirmation email:', emailResult.error);
+    }
+
     res.json({
       success: true,
-      message: 'Payment verified successfully'
+      message: 'Payment verified successfully',
+      emailSent: emailResult.success
     });
   } catch (error) {
     console.error('Verify payment error:', error);

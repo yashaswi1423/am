@@ -442,6 +442,249 @@ export const sendLoginNotification = async (loginDetails) => {
   }
 };
 
+// Send payment confirmation email to customer
+export const sendPaymentConfirmation = async (paymentDetails) => {
+  console.log('📧 Starting payment confirmation email send process...');
+  
+  const transporter = createTransporter();
+  
+  if (!transporter) {
+    console.error('❌ Email transporter not configured');
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  const { 
+    customerEmail, 
+    customerName, 
+    orderId, 
+    transactionId, 
+    paymentAmount,
+    verifiedAt 
+  } = paymentDetails;
+
+  const mailOptions = {
+    from: EMAIL_CONFIG.auth.user,
+    to: customerEmail,
+    subject: '✅ Payment Confirmed - Order #' + orderId,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+          }
+          .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+          }
+          .content {
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            color: #155724;
+          }
+          .info-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+          }
+          .info-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+          }
+          .info-table tr:last-child td {
+            border-bottom: none;
+          }
+          .info-table td:first-child {
+            font-weight: bold;
+            width: 180px;
+            color: #28a745;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+          }
+          .icon {
+            font-size: 64px;
+            margin-bottom: 10px;
+          }
+          .order-id {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+          }
+          .next-steps {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+          }
+          .next-steps h3 {
+            margin-top: 0;
+            color: #0066cc;
+          }
+          .next-steps ul {
+            margin: 10px 0;
+            padding-left: 20px;
+          }
+          .next-steps li {
+            margin: 8px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="icon">✅</div>
+            <h1 style="margin: 0;">Payment Confirmed!</h1>
+            <p style="margin: 10px 0 0 0;">Your payment has been successfully verified</p>
+          </div>
+          
+          <div class="content">
+            <div class="success-box">
+              <strong>🎉 Great News!</strong> Your payment has been verified by our team and your order is now being processed.
+            </div>
+            
+            <p>Dear <strong>${customerName}</strong>,</p>
+            
+            <p>Thank you for your purchase! We're excited to confirm that your payment has been successfully verified.</p>
+            
+            <div class="order-id">
+              Order ID: #${orderId}
+            </div>
+            
+            <h2 style="color: #28a745;">Payment Details</h2>
+            <table class="info-table">
+              <tr>
+                <td>💳 Transaction ID:</td>
+                <td><strong>${transactionId}</strong></td>
+              </tr>
+              <tr>
+                <td>💰 Amount Paid:</td>
+                <td><strong>₹${paymentAmount}</strong></td>
+              </tr>
+              <tr>
+                <td>✅ Verified On:</td>
+                <td>${new Date(verifiedAt).toLocaleString('en-IN', { 
+                  timeZone: 'Asia/Kolkata',
+                  dateStyle: 'full',
+                  timeStyle: 'short'
+                })}</td>
+              </tr>
+              <tr>
+                <td>📦 Order Status:</td>
+                <td><strong style="color: #28a745;">Payment Verified - Processing</strong></td>
+              </tr>
+            </table>
+            
+            <div class="next-steps">
+              <h3>📋 What Happens Next?</h3>
+              <ul>
+                <li>✅ Your order is now confirmed and being prepared</li>
+                <li>📦 We'll pack your items with care</li>
+                <li>🚚 You'll receive shipping updates via email</li>
+                <li>📱 Track your order status anytime</li>
+              </ul>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 20px; border-left: 4px solid #ffc107;">
+              <strong>📞 Need Help?</strong><br>
+              If you have any questions about your order, feel free to contact our customer support team. We're here to help!
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+              <p style="margin: 0; font-size: 18px; color: #28a745;">
+                <strong>Thank you for shopping with AM Fashions! 🛍️</strong>
+              </p>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p>This is an automated confirmation from AM Fashions.</p>
+            <p>Please keep this email for your records.</p>
+            <p>© ${new Date().getFullYear()} AM Fashions. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      Payment Confirmed - Order #${orderId}
+      
+      Dear ${customerName},
+      
+      Great news! Your payment has been successfully verified by our team.
+      
+      Payment Details:
+      - Order ID: #${orderId}
+      - Transaction ID: ${transactionId}
+      - Amount Paid: ₹${paymentAmount}
+      - Verified On: ${new Date(verifiedAt).toLocaleString()}
+      - Order Status: Payment Verified - Processing
+      
+      What Happens Next?
+      - Your order is now confirmed and being prepared
+      - We'll pack your items with care
+      - You'll receive shipping updates via email
+      - Track your order status anytime
+      
+      Thank you for shopping with AM Fashions!
+      
+      If you have any questions, please contact our customer support team.
+    `
+  };
+
+  try {
+    console.log('📧 Attempting to send payment confirmation email to:', customerEmail);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Payment confirmation email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending payment confirmation email:', error);
+    console.error('❌ Error details:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode
+    });
+    return { success: false, error: error.message, details: error.code };
+  }
+};
+
 // Test email configuration
 export const testEmailConfig = async () => {
   const transporter = createTransporter();
@@ -463,5 +706,6 @@ export const testEmailConfig = async () => {
 export default {
   sendLoginApprovalRequest,
   sendLoginNotification,
+  sendPaymentConfirmation,
   testEmailConfig
 };
