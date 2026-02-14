@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('Black');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const imageRef = useRef(null);
 
   const sizes = ['XS', 'S', 'M', 'L', 'XL'];
   const colors = [
@@ -29,6 +32,50 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  // Swipe handlers for mobile
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && images.length > 1) {
+      handleNext();
+    }
+    if (isRightSwipe && images.length > 1) {
+      handlePrev();
+    }
+
+    // Reset
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
+      } else if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentImageIndex, images.length]);
+
   const handleAddToCart = () => {
     onAddToCart({ ...product, size: selectedSize, color: selectedColor, image: images[currentImageIndex] });
   };
@@ -53,31 +100,56 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
         <div className="grid md:grid-cols-2 gap-3 md:gap-6 p-3 md:p-6 h-full overflow-y-auto">
           {/* Left: Image Gallery */}
           <div className="space-y-2 md:space-y-3 flex flex-col h-full">
-            <div className="relative flex-1 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden group">
+            <div 
+              ref={imageRef}
+              className="relative flex-1 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden group"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <img
                 src={images[currentImageIndex]}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover select-none"
+                draggable="false"
               />
               
               {images.length > 1 && (
                 <>
+                  {/* Left Arrow Button */}
                   <button
                     onClick={handlePrev}
-                    className="absolute left-1 md:left-2 top-1/2 -translate-y-1/2 w-7 h-7 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg"
+                    className="absolute left-1 md:left-2 top-1/2 -translate-y-1/2 w-7 h-7 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg z-10"
+                    aria-label="Previous image"
                   >
                     <svg className="w-4 h-4 md:w-6 md:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
+                  
+                  {/* Right Arrow Button */}
                   <button
                     onClick={handleNext}
-                    className="absolute right-1 md:right-2 top-1/2 -translate-y-1/2 w-7 h-7 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg"
+                    className="absolute right-1 md:right-2 top-1/2 -translate-y-1/2 w-7 h-7 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow-lg z-10"
+                    aria-label="Next image"
                   >
                     <svg className="w-4 h-4 md:w-6 md:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
+
+                  {/* Swipe Indicator for Mobile - Shows briefly */}
+                  <div className="absolute bottom-16 left-1/2 -translate-x-1/2 md:hidden pointer-events-none">
+                    <div className="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2 animate-pulse">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                      </svg>
+                      <span>Swipe</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
