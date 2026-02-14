@@ -118,7 +118,7 @@ const Home = ({ addToCart }) => {
           <img
             src="/desktop.jpeg"
             alt="Fashion Store"
-            className="hidden md:block w-full h-full object-cover object-center animate-zoom-in"
+            className="hidden md:block w-full h-full object-cover object-[center_60%] animate-zoom-in"
           />
           <img
             src="/mobile.jpeg"
