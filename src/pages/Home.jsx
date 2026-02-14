@@ -9,17 +9,8 @@ const categories = [
   'Gym wear', 'Sleepwear sets', 'Sweatshirts', 'Jeans'
 ];
 
-const sizes = ['XS', 'S', 'M', 'L', 'XL'];
-const colors = [
-  { name: 'Black', value: '#000000' },
-  { name: 'White', value: '#FFFFFF' },
-  { name: 'Blue', value: '#3B82F6' }
-];
-
 const Home = ({ addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedSizes, setSelectedSizes] = useState({});
-  const [selectedColors, setSelectedColors] = useState({});
   const [currentImageIndex, setCurrentImageIndex] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate();
@@ -27,27 +18,6 @@ const Home = ({ addToCart }) => {
   const filteredProducts = selectedCategory === 'All'
     ? products
     : products.filter(product => product.category === selectedCategory);
-
-  const handleAddToCart = (product) => {
-    const size = selectedSizes[product.id] || 'M';
-    const color = selectedColors[product.id] || colors[0].name;
-    const image = product.images ? product.images[currentImageIndex[product.id] || 0] : product.image;
-    addToCart({ ...product, image, size, color });
-  };
-
-  const handleBuyNow = (product) => {
-    const size = selectedSizes[product.id] || 'M';
-    const color = selectedColors[product.id] || colors[0].name;
-    const image = product.images ? product.images[currentImageIndex[product.id] || 0] : product.image;
-    addToCart({ ...product, image, size, color });
-    navigate('/cart');
-    setTimeout(() => {
-      const paymentSection = document.getElementById('payment-section');
-      if (paymentSection) {
-        paymentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
 
   const handleNextImage = (productId, totalImages) => {
     setCurrentImageIndex(prev => ({
