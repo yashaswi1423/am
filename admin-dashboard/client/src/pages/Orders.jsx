@@ -205,8 +205,10 @@ const Orders = () => {
                   <tr className="border-b border-gray-200">
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order Number</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Customer</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Items</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Date</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Amount</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Payment</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
                   </tr>
@@ -215,18 +217,47 @@ const Orders = () => {
                   {filteredOrders.length > 0 ? (
                     filteredOrders.map((order) => (
                       <tr key={order.order_id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="px-4 py-4 text-sm text-gray-800">#{order.order_number}</td>
+                        <td className="px-4 py-4 text-sm text-gray-800 font-mono">#{order.order_number}</td>
                         <td className="px-4 py-4">
                           <div>
                             <p className="text-sm font-medium text-gray-800">{order.customer_name || 'Guest'}</p>
                             <p className="text-xs text-gray-500">{order.customer_email || 'N/A'}</p>
+                            {order.customer_phone && (
+                              <p className="text-xs text-gray-500">{order.customer_phone}</p>
+                            )}
                           </div>
                         </td>
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {order.item_count || 0} item{order.item_count !== 1 ? 's' : ''}
+                          </span>
+                        </td>
                         <td className="px-4 py-4 text-sm text-gray-600">
-                          {new Date(order.created_at).toLocaleDateString()}
+                          {new Date(order.created_at).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                          <br />
+                          <span className="text-xs text-gray-400">
+                            {new Date(order.created_at).toLocaleTimeString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
                         </td>
                         <td className="px-4 py-4 text-sm font-semibold text-gray-800">
                           ₹{parseFloat(order.total_amount).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`inline-block text-xs px-2 py-1 rounded-full font-medium ${
+                            order.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                            order.payment_status === 'pending_verification' ? 'bg-yellow-100 text-yellow-800' :
+                            order.payment_status === 'failed' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.payment_status?.replace('_', ' ')}
+                          </span>
                         </td>
                         <td className="px-4 py-4">
                           <select
@@ -264,7 +295,7 @@ const Orders = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
                         No orders found
                       </td>
                     </tr>
@@ -288,7 +319,8 @@ const Orders = () => {
                 <XCircle size={24} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-6">
+              {/* Customer & Order Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Customer</p>
@@ -316,41 +348,95 @@ const Orders = () => {
                     {selectedOrder.payment_status}
                   </span>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Subtotal</p>
-                  <p className="font-medium text-gray-800">
-                    ₹{parseFloat(selectedOrder.subtotal).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Total Amount</p>
-                  <p className="font-bold text-xl text-gray-800">
-                    ₹{parseFloat(selectedOrder.total_amount).toFixed(2)}
-                  </p>
-                </div>
               </div>
-              {selectedOrder.shipping_address && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Shipping Address</p>
-                  <p className="text-gray-800">{selectedOrder.shipping_address}</p>
+
+              {/* Order Items */}
+              {selectedOrder.items && selectedOrder.items.length > 0 && (
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
+                  <div className="space-y-3">
+                    {selectedOrder.items.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{item.product_name}</p>
+                          {item.variant_details && (
+                            <p className="text-sm text-gray-600">{item.variant_details}</p>
+                          )}
+                          <div className="flex items-center gap-4 mt-2 text-sm">
+                            <span className="text-gray-600">Qty: {item.quantity}</span>
+                            <span className="text-gray-600">Unit Price: ₹{parseFloat(item.unit_price).toFixed(2)}</span>
+                            <span className="font-semibold text-gray-900">Subtotal: ₹{parseFloat(item.subtotal).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-              {selectedOrder.billing_address && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Billing Address</p>
-                  <p className="text-gray-800">{selectedOrder.billing_address}</p>
+
+              {/* Order Summary */}
+              <div className="border-t pt-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-medium text-gray-800">₹{parseFloat(selectedOrder.subtotal).toFixed(2)}</span>
+                  </div>
+                  {selectedOrder.discount_amount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Discount</span>
+                      <span className="font-medium text-green-600">-₹{parseFloat(selectedOrder.discount_amount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {selectedOrder.tax_amount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Tax</span>
+                      <span className="font-medium text-gray-800">₹{parseFloat(selectedOrder.tax_amount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {selectedOrder.shipping_cost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Shipping</span>
+                      <span className="font-medium text-gray-800">₹{parseFloat(selectedOrder.shipping_cost).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold border-t pt-2">
+                    <span className="text-gray-900">Total Amount</span>
+                    <span className="text-blue-600">₹{parseFloat(selectedOrder.total_amount).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Addresses */}
+              {selectedOrder.shipping_address && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Shipping Address</p>
+                  <p className="text-gray-800 whitespace-pre-line">{selectedOrder.shipping_address}</p>
+                </div>
+              )}
+              {selectedOrder.billing_address && selectedOrder.billing_address !== selectedOrder.shipping_address && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Billing Address</p>
+                  <p className="text-gray-800 whitespace-pre-line">{selectedOrder.billing_address}</p>
+                </div>
+              )}
+
+              {/* Additional Info */}
+              {selectedOrder.coupon_code && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Coupon Code</p>
+                  <p className="text-gray-800 font-mono">{selectedOrder.coupon_code}</p>
                 </div>
               )}
               {selectedOrder.notes && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Order Notes</p>
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Order Notes</p>
                   <p className="text-gray-800">{selectedOrder.notes}</p>
                 </div>
               )}
               {selectedOrder.tracking_number && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Tracking Number</p>
-                  <p className="font-mono text-gray-800">{selectedOrder.tracking_number}</p>
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Tracking Number</p>
+                  <p className="font-mono text-blue-600">{selectedOrder.tracking_number}</p>
                 </div>
               )}
             </div>

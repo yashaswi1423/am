@@ -309,9 +309,19 @@ export const verifyPayment = async (req, res) => {
     
     if (!verification.customer_email) {
       console.error('❌ Customer email not found in verification record');
-    } else {
-      console.log('📧 Sending email to:', verification.customer_email);
+      console.error('❌ Verification data:', JSON.stringify(verification, null, 2));
       
+      return res.json({
+        success: true,
+        message: 'Payment verified successfully',
+        emailSent: false,
+        emailError: 'Customer email not found in verification record'
+      });
+    }
+    
+    console.log('📧 Sending email to:', verification.customer_email);
+    
+    try {
       const emailResult = await sendPaymentConfirmation({
         customerEmail: verification.customer_email,
         customerName: verification.customer_name || 'Valued Customer',
@@ -333,6 +343,16 @@ export const verifyPayment = async (req, res) => {
         message: 'Payment verified successfully',
         emailSent: emailResult.success,
         emailError: emailResult.success ? null : emailResult.error
+      });
+    } catch (emailError) {
+      console.error('❌ Exception while sending email:', emailError);
+      console.error('❌ Email exception stack:', emailError.stack);
+      
+      res.json({
+        success: true,
+        message: 'Payment verified successfully',
+        emailSent: false,
+        emailError: emailError.message
       });
     }
   } catch (error) {

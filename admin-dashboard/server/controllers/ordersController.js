@@ -19,9 +19,15 @@ export const getAllOrders = async (req, res) => {
         o.created_at,
         o.updated_at,
         (c.first_name || ' ' || c.last_name) AS customer_name,
-        c.email AS customer_email
+        c.email AS customer_email,
+        c.phone AS customer_phone,
+        COUNT(oi.order_item_id) as item_count
        FROM orders o
        LEFT JOIN customers c ON o.customer_id = c.customer_id
+       LEFT JOIN order_items oi ON o.order_id = oi.order_id
+       GROUP BY o.order_id, o.order_number, o.customer_id, o.order_status, 
+                o.payment_status, o.subtotal, o.total_amount, o.shipping_address,
+                o.created_at, o.updated_at, c.first_name, c.last_name, c.email, c.phone
        ORDER BY o.created_at DESC`
     );
 
@@ -52,6 +58,20 @@ export const getOrderById = async (req, res) => {
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
+
+    // Fetch order items
+    const orderItems = await db.getMany(
+      `SELECT 
+        oi.*,
+        p.product_name as original_product_name,
+        p.image_url
+       FROM order_items oi
+       LEFT JOIN products p ON oi.product_id = p.product_id
+       WHERE oi.order_id = ?`,
+      [req.params.id]
+    );
+
+    order.items = orderItems;
 
     res.json({ success: true, data: order });
   } catch (error) {

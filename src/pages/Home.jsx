@@ -270,11 +270,14 @@ const Home = ({ addToCart }) => {
           {filteredProducts.map((product, index) => (
             <div
               key={product.id}
-              onClick={() => setSelectedProduct(product)}
               className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-700 group hover-lift animate-fade-in-up hover-shine cursor-pointer"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <div className="relative overflow-hidden aspect-[3/4] bg-gray-100 group/image">
+              {/* Product Image */}
+              <div 
+                className="relative overflow-hidden aspect-[3/4] bg-gray-100 group/image"
+                onClick={() => setSelectedProduct(product)}
+              >
                 <img
                   src={product.images ? product.images[currentImageIndex[product.id] || 0] : product.image}
                   alt={product.name}
@@ -282,16 +285,15 @@ const Home = ({ addToCart }) => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
-                {/* Image Navigation Arrows */}
+                {/* Desktop: Image Navigation Arrows */}
                 {product.images && product.images.length > 1 && (
                   <>
-                    {/* Previous Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handlePrevImage(product.id, product.images.length);
                       }}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/image:opacity-100 hover:bg-white hover:scale-110 transition-all duration-300 z-10 shadow-lg"
+                      className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full items-center justify-center opacity-0 group-hover/image:opacity-100 hover:bg-white hover:scale-110 transition-all duration-300 z-10 shadow-lg"
                       aria-label="Previous image"
                     >
                       <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,13 +301,12 @@ const Home = ({ addToCart }) => {
                       </svg>
                     </button>
                     
-                    {/* Next Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleNextImage(product.id, product.images.length);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/image:opacity-100 hover:bg-white hover:scale-110 transition-all duration-300 z-10 shadow-lg"
+                      className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full items-center justify-center opacity-0 group-hover/image:opacity-100 hover:bg-white hover:scale-110 transition-all duration-300 z-10 shadow-lg"
                       aria-label="Next image"
                     >
                       <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,75 +335,128 @@ const Home = ({ addToCart }) => {
                   </>
                 )}
                 
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-500 animate-wiggle">
+                {/* View Details Badge - Desktop */}
+                <div className="hidden md:block absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-500 animate-wiggle">
                   {product.images ? `${(currentImageIndex[product.id] || 0) + 1}/${product.images.length}` : 'View'}
                 </div>
+
+                {/* Mobile: Quick Action Icons */}
+                <div className="md:hidden absolute bottom-3 left-3 right-3 flex gap-2 bg-white/95 backdrop-blur-sm rounded-xl p-2 shadow-lg">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCart(product);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1 bg-white border border-accent text-accent py-2 rounded-lg text-xs font-medium active:scale-95 transition-transform"
+                    aria-label="Add to cart"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedProduct(product);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1 bg-accent text-white py-2 rounded-lg text-xs font-medium active:scale-95 transition-transform"
+                    aria-label="View details"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className="p-3 md:p-6 space-y-2 md:space-y-4">
-                <div className="transform transition-transform duration-300 group-hover:translate-y-[-2px]">
-                  <h3 className="text-sm md:text-lg font-semibold text-gray-900 group-hover:text-accent transition-colors duration-300 line-clamp-1">{product.name}</h3>
-                  <p className="text-xs md:text-sm text-gray-500 mt-1">{product.category}</p>
-                  <p className="text-lg md:text-xl font-bold text-accent mt-1 md:mt-2 transform transition-all duration-300 group-hover:scale-110 inline-block">₹{product.price}</p>
-                </div>
-                
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Color:</p>
-                  <div className="flex gap-1 md:gap-2">
-                    {colors.map(color => (
-                      <button
-                        key={color.name}
-                        onClick={() => setSelectedColors({ ...selectedColors, [product.id]: color.name })}
-                        className={`w-7 h-7 md:w-10 md:h-10 rounded-full font-medium transition-all duration-300 transform hover:scale-110 border-2 ${
-                          (selectedColors[product.id] || colors[0].name) === color.name
-                            ? 'border-accent scale-105 ring-2 ring-accent/30'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                        style={{ backgroundColor: color.value }}
-                        title={color.name}
-                      >
-                        {color.value === '#FFFFFF' && (
-                          <span className="sr-only">{color.name}</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+
+              {/* Product Info - Simplified for Mobile, Full for Desktop */}
+              <div className="p-3 md:p-6">
+                {/* Mobile: Only Name and Price */}
+                <div className="md:hidden space-y-1">
+                  <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
+                  <p className="text-lg font-bold text-accent">₹{product.price}</p>
                 </div>
 
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Size:</p>
-                  <div className="flex gap-1 md:gap-2">
-                    {sizes.map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSizes({ ...selectedSizes, [product.id]: size })}
-                        className={`w-8 h-8 md:w-10 md:h-10 rounded-xl text-[10px] md:text-base font-medium transition-all duration-300 transform hover:scale-110 hover:rotate-6 ${
-                          (selectedSizes[product.id] || 'M') === size
-                            ? 'bg-accent text-white shadow-lg scale-105 ring-2 ring-accent/30'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow-md'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                {/* Desktop: Full Details */}
+                <div className="hidden md:block space-y-4">
+                  <div className="transform transition-transform duration-300 group-hover:translate-y-[-2px]">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-accent transition-colors duration-300 line-clamp-1">{product.name}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{product.category}</p>
+                    <p className="text-xl font-bold text-accent mt-2 transform transition-all duration-300 group-hover:scale-110 inline-block">₹{product.price}</p>
                   </div>
-                </div>
-
-                <div className="flex gap-1 md:gap-2">
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    className="flex-1 bg-white border-2 border-accent text-accent py-2 md:py-3 rounded-xl md:rounded-2xl text-xs md:text-base font-medium hover:bg-accent hover:text-white transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
-                  >
-                    <span className="relative z-10">Add to Cart</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/10 to-transparent transform -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
-                  </button>
                   
-                  <button
-                    onClick={() => handleBuyNow(product)}
-                    className="flex-1 bg-accent text-white py-2 md:py-3 rounded-xl md:rounded-2xl text-xs md:text-base font-medium hover:bg-gray-800 transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
-                  >
-                    <span className="relative z-10">Buy Now</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
-                  </button>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Color:</p>
+                    <div className="flex gap-2">
+                      {colors.map(color => (
+                        <button
+                          key={color.name}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedColors({ ...selectedColors, [product.id]: color.name });
+                          }}
+                          className={`w-10 h-10 rounded-full font-medium transition-all duration-300 transform hover:scale-110 border-2 ${
+                            (selectedColors[product.id] || colors[0].name) === color.name
+                              ? 'border-accent scale-105 ring-2 ring-accent/30'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                          title={color.name}
+                        >
+                          {color.value === '#FFFFFF' && (
+                            <span className="sr-only">{color.name}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Size:</p>
+                    <div className="flex gap-2">
+                      {sizes.map(size => (
+                        <button
+                          key={size}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSizes({ ...selectedSizes, [product.id]: size });
+                          }}
+                          className={`w-10 h-10 rounded-xl text-base font-medium transition-all duration-300 transform hover:scale-110 hover:rotate-6 ${
+                            (selectedSizes[product.id] || 'M') === size
+                              ? 'bg-accent text-white shadow-lg scale-105 ring-2 ring-accent/30'
+                              : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow-md'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(product);
+                      }}
+                      className="flex-1 bg-white border-2 border-accent text-accent py-3 rounded-2xl text-base font-medium hover:bg-accent hover:text-white transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
+                    >
+                      <span className="relative z-10">Add to Cart</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/10 to-transparent transform -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
+                    </button>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBuyNow(product);
+                      }}
+                      className="flex-1 bg-accent text-white py-3 rounded-2xl text-base font-medium hover:bg-gray-800 transition-all duration-500 hover:shadow-xl active:scale-95 transform hover:-translate-y-1 relative overflow-hidden group/btn"
+                    >
+                      <span className="relative z-10">Buy Now</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
