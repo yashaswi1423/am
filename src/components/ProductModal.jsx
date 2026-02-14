@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
   const [selectedSize, setSelectedSize] = useState('M');
@@ -24,13 +24,13 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
 
   const images = product.images || [product.image];
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
+  }, [images.length]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  }, [images.length]);
 
   // Swipe handlers for mobile
   const handleTouchStart = (e) => {
@@ -74,7 +74,7 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentImageIndex, images.length]);
+  }, [handleNext, handlePrev, onClose]);
 
   const handleAddToCart = () => {
     onAddToCart({ ...product, size: selectedSize, color: selectedColor, image: images[currentImageIndex] });
