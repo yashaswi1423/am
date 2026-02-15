@@ -130,60 +130,32 @@ export const getProductById = async (req, res) => {
 =========================== */
 export const createProduct = async (req, res) => {
   try {
-    console.log('=== CREATE PRODUCT REQUEST ===');
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('=== CREATE PRODUCT REQUEST v1.0.3 ===');
     console.log('Body:', JSON.stringify(req.body, null, 2));
-    console.log('Body type:', typeof req.body);
-    console.log('Body keys:', Object.keys(req.body || {}));
     
-    // Extract and normalize data
-    let { name, description, category, base_price, is_active } = req.body;
+    // Extract data - SIMPLIFIED
+    const { name, description, category, base_price, is_active } = req.body;
     
-    // Handle potential string values from form data
-    if (typeof name === 'string') name = name.trim();
-    if (typeof description === 'string') description = description.trim();
-    if (typeof category === 'string') category = category.trim();
-    if (typeof base_price === 'string') base_price = base_price.trim();
-    
-    console.log('Extracted values:');
-    console.log('  name:', name, '(type:', typeof name, ')');
-    console.log('  description:', description, '(type:', typeof description, ')');
-    console.log('  category:', category, '(type:', typeof category, ')');
-    console.log('  base_price:', base_price, '(type:', typeof base_price, ')');
-    console.log('  is_active:', is_active, '(type:', typeof is_active, ')');
-    
-    // Validate required fields with detailed error messages
-    const errors = [];
-    
-    if (!name || name === '') {
-      errors.push('Product name is required');
-      console.log('❌ Validation failed: name is missing or empty');
-    }
-    
-    if (!category || category === '') {
-      errors.push('Category is required');
-      console.log('❌ Validation failed: category is missing or empty');
-    }
-    
-    const priceNum = parseFloat(base_price);
-    if (!base_price || isNaN(priceNum) || priceNum <= 0) {
-      errors.push('Valid base price is required');
-      console.log('❌ Validation failed: base_price is invalid', { base_price, priceNum, isNaN: isNaN(priceNum) });
-    }
-    
-    if (errors.length > 0) {
+    // Simple validation - just check if they exist
+    if (!name || !category || !base_price) {
+      console.log('❌ Validation failed:', { name, category, base_price });
       return res.status(400).json({ 
         success: false, 
-        message: errors.join(', '),
-        errors,
-        debug: { 
-          receivedData: { name, category, base_price, description, is_active },
-          bodyKeys: Object.keys(req.body)
-        }
+        message: 'Product name, category, and base price are required',
+        received: { name, category, base_price }
       });
     }
     
-    console.log('✅ Validation passed, inserting into database...');
+    // Parse price
+    const priceNum = parseFloat(base_price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid price value'
+      });
+    }
+    
+    console.log('✅ Validation passed, creating product...');
     
     const product = await db.insert(
       `INSERT INTO products (product_name, description, category, base_price, is_active)
@@ -191,11 +163,10 @@ export const createProduct = async (req, res) => {
       [name, description || '', category, priceNum, is_active !== false]
     );
     
-    console.log('✅ Product created successfully:', product);
+    console.log('✅ Product created:', product);
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     console.error('❌ Create product error:', error);
-    console.error('Error stack:', error.stack);
     res.status(500).json({ success: false, message: error.message });
   }
 };
