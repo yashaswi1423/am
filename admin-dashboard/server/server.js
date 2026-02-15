@@ -1,5 +1,5 @@
 // server.js
-// Updated: 2026-02-15 20:38 - Force deployment v1.0.1
+// Updated: 2026-02-15 23:06 - Force deployment v1.0.2 - Fixed product validation
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
