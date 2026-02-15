@@ -1,8 +1,8 @@
 // API Service for communicating with backend
 import axios from 'axios';
 
-// Hardcoded backend URL - no environment variable needed
-const API_BASE_URL = 'https://am-seven-coral.vercel.app/api';
+// Backend URL - Updated to new deployment
+const API_BASE_URL = 'https://am2.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

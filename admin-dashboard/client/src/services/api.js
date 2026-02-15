@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // API URL - uses environment variable or falls back to production
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://am-seven-coral.vercel.app/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://am2.vercel.app/api'
 
 console.log('Admin Dashboard API URL:', API_BASE_URL)
 
