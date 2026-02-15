@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Order Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        .warning {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+        .info {
+            border-left-color: #2196F3;
+            background: #e3f2fd;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .stat {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Production Order Diagnostic Tool</h1>
+        <p>This tool helps diagnose why orders aren't showing in your admin dashboard when deployed.</p>
+
+        <h2>Step 1: Check Database Connection</h2>
+        <button onclick="checkDatabase()">Check Database Info</button>
+        <div id="dbResult"></div>
+
+        <h2>Step 2: Test Order Creation</h2>
+        <div>
+            <label>Customer Email:</label>
+            <input type="email" id="testEmail" value="test@example.com" placeholder="test@example.com">
+            
+            <label>Customer Name:</label>
+            <input type="text" id="testName" value="Test Customer" placeholder="Test Customer">
+            
+            <label>Phone:</label>
+            <input type="text" id="testPhone" value="9999999999" placeholder="9999999999">
+            
+            <label>Address:</label>
+            <textarea id="testAddress" rows="3" placeholder="123 Test Street, Test City">123 Test Street, Test City, Test State 123456</textarea>
+        </div>
+        <button onclick="createTestOrder()">Create Test Order</button>
+        <div id="orderResult"></div>
+
+        <h2>Step 3: Check Recent Orders</h2>
+        <button onclick="checkOrders()">Fetch Recent Orders</button>
+        <div id="ordersResult"></div>
+
+        <h2>Step 4: Check API Health</h2>
+        <button onclick="checkHealth()">Check API Health</button>
+        <div id="healthResult"></div>
+
+        <h2>Configuration</h2>
+        <label>Backend API URL:</label>
+        <input type="text" id="apiUrl" value="https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api">
+        <button onclick="saveApiUrl()">Save URL</button>
+    </div>
+
+    <script>
+        // Get API URL from localStorage or use default
+        let API_URL = localStorage.getItem('apiUrl') || 'https://am-git-main-yashaswis-projects-bedecf50.vercel.app/api';
+        document.getElementById('apiUrl').value = API_URL;
+
+        function saveApiUrl() {
+            API_URL = document.getElementById('apiUrl').value;
+            localStorage.setItem('apiUrl', API_URL);
+            showResult('healthResult', 'API URL saved: ' + API_URL, 'success');
+        }
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = 'result ' + type;
+            element.textContent = typeof content === 'object' ? JSON.stringify(content, null, 2) : content;
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.className = 'result info';
+            element.innerHTML = 'Loading...<span class="loading"></span>';
+        }
+
+        async function checkDatabase() {
+            showLoading('dbResult');
+            try {
+                const response = await fetch(`${API_URL}/test/db-info`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let message = `✅ Database Connected!\n\n`;
+                    message += `Database Type: ${data.database_type}\n`;
+                    message += `Environment: ${data.environment}\n`;
+                    message += `Running on Vercel: ${data.vercel ? 'Yes' : 'No'}\n`;
+                    message += `DB Host: ${data.db_host}\n\n`;
+                    message += `📊 Statistics:\n`;
+                    message += `Orders: ${data.order_count}\n`;
+                    message += `Customers: ${data.customer_count}\n`;
+                    message += `Order Items: ${data.order_items_count}\n\n`;
+                    
+                    if (data.recent_orders && data.recent_orders.length > 0) {
+                        message += `Recent Orders:\n`;
+                        data.recent_orders.forEach(order => {
+                            message += `  - ${order.order_number} (${new Date(order.created_at).toLocaleString()})\n`;
+                        });
+                    } else {
+                        message += `⚠️ No orders found in database!\n`;
+                    }
+                    
+                    showResult('dbResult', message, data.order_count > 0 ? 'success' : 'warning');
+                } else {
+                    showResult('dbResult', `❌ Error: ${data.error}\n\n${data.stack || ''}`, 'error');
+                }
+            } catch (error) {
+                showResult('dbResult', `❌ Failed to connect: ${error.message}`, 'error');
+            }
+        }
+
+        async function createTestOrder() {
+            showLoading('orderResult');
+            try {
+                // Step 1: Create customer
+                const customerData = {
+                    email: document.getElementById('testEmail').value,
+                    password_hash: 'test_customer',
+                    first_name: document.getElementById('testName').value.split(' ')[0],
+                    last_name: document.getElementById('testName').value.split(' ').slice(1).join(' ') || 'User',
+                    phone: document.getElementById('testPhone').value,
+                    address_line1: document.getElementById('testAddress').value,
+                    city: 'Test City',
+                    state: 'Test State',
+                    postal_code: '123456',
+                    country: 'India'
+                };
+
+                let customer;
+                try {
+                    const customerResponse = await fetch(`${API_URL}/customers`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(customerData)
+                    });
+                    const customerResult = await customerResponse.json();
+                    customer = customerResult.data || customerResult;
+                } catch (e) {
+                    // Customer might already exist, try to get by email
+                    const getResponse = await fetch(`${API_URL}/customers/email/${encodeURIComponent(customerData.email)}`);
+                    const getResult = await getResponse.json();
+                    customer = getResult.data || getResult;
+                }
+
+                // Step 2: Create order
+                const orderData = {
+                    customer_id: customer.customer_id,
+                    order_status: 'pending',
+                    payment_status: 'pending',
+                    subtotal: 999,
+                    discount_amount: 0,
+                    tax_amount: 0,
+                    shipping_cost: 0,
+                    total_amount: 999,
+                    shipping_address: document.getElementById('testAddress').value,
+                    billing_address: document.getElementById('testAddress').value,
+                    items: [
+                        {
+                            product_name: 'Test Product',
+                            variant_details: 'Size: M, Color: Blue',
+                            quantity: 1,
+                            unit_price: 999,
+                            subtotal: 999
+                        }
+                    ],
+                    payment_method: 'test'
+                };
+
+                const orderResponse = await fetch(`${API_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const orderResult = await orderResponse.json();
+
+                if (orderResult.success) {
+                    let message = `✅ Test Order Created Successfully!\n\n`;
+                    message += `Order ID: ${orderResult.data.order_id}\n`;
+                    message += `Order Number: ${orderResult.data.order_number}\n`;
+                    message += `Customer ID: ${customer.customer_id}\n\n`;
+                    message += `Now check your admin dashboard to see if this order appears!\n`;
+                    message += `If it doesn't appear, there's a database connection issue.`;
+                    showResult('orderResult', message, 'success');
+                } else {
+                    showResult('orderResult', `❌ Failed to create order:\n${orderResult.message || orderResult.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('orderResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkOrders() {
+            showLoading('ordersResult');
+            try {
+                const response = await fetch(`${API_URL}/orders`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    let message = `📦 Found ${data.data.length} orders\n\n`;
+                    
+                    if (data.data.length > 0) {
+                        message += `Recent Orders:\n`;
+                        data.data.slice(0, 10).forEach(order => {
+                            message += `\n${order.order_number}\n`;
+                            message += `  Customer: ${order.customer_name || 'N/A'}\n`;
+                            message += `  Email: ${order.customer_email || 'N/A'}\n`;
+                            message += `  Amount: ₹${order.total_amount}\n`;
+                            message += `  Status: ${order.order_status}\n`;
+                            message += `  Date: ${new Date(order.created_at).toLocaleString()}\n`;
+                        });
+                    } else {
+                        message += `⚠️ No orders found!\n\n`;
+                        message += `This means:\n`;
+                        message += `1. No orders have been placed yet, OR\n`;
+                        message += `2. Orders are going to a different database\n`;
+                    }
+                    
+                    showResult('ordersResult', message, data.data.length > 0 ? 'success' : 'warning');
+                } else {
+                    showResult('ordersResult', `❌ Error fetching orders: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showResult('ordersResult', `❌ Failed to fetch orders: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkHealth() {
+            showLoading('healthResult');
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                let message = `API Status: ${data.status}\n`;
+                message += `Database: ${data.database}\n`;
+                message += `Timestamp: ${data.timestamp}\n`;
+                
+                showResult('healthResult', message, data.status === 'OK' ? 'success' : 'error');
+            } catch (error) {
+                showResult('healthResult', `❌ API is not responding: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check on load
+        window.onload = () => {
+            checkDatabase();
+        };
+    </script>
+</body>
+</html>

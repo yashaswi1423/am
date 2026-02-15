@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Production API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            background: white;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Production API Diagnostic Tool</h1>
+    <p>Test your production backend at: <strong>https://am-seven-coral.vercel.app/api</strong></p>
+
+    <!-- Test 1: Health Check -->
+    <div class="test-section">
+        <h2>Test 1: Health Check</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="health-result" class="result"></div>
+    </div>
+
+    <!-- Test 2: Get Products -->
+    <div class="test-section">
+        <h2>Test 2: Get Products</h2>
+        <button onclick="testGetProducts()">Get All Products</button>
+        <div id="products-result" class="result"></div>
+    </div>
+
+    <!-- Test 3: Create Product (with auth) -->
+    <div class="test-section">
+        <h2>Test 3: Create Product (Requires Auth)</h2>
+        <div>
+            <input type="text" id="token" placeholder="Your auth token" style="width: 400px;">
+            <p style="font-size: 12px; color: #666;">Get token from localStorage in admin dashboard (F12 → Application → Local Storage → adminToken)</p>
+        </div>
+        <div>
+            <input type="text" id="product-name" placeholder="Product Name" value="Test Product">
+            <input type="text" id="product-category" placeholder="Category" value="T-Shirts">
+            <input type="number" id="product-price" placeholder="Price" value="299">
+        </div>
+        <button onclick="testCreateProduct()">Create Product</button>
+        <div id="create-result" class="result"></div>
+    </div>
+
+    <!-- Test 4: Database Info -->
+    <div class="test-section">
+        <h2>Test 4: Database Info</h2>
+        <button onclick="testDatabaseInfo()">Get Database Info</button>
+        <div id="db-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://am-seven-coral.vercel.app/api';
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testGetProducts() {
+            const resultDiv = document.getElementById('products-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testCreateProduct() {
+            const resultDiv = document.getElementById('create-result');
+            const token = document.getElementById('token').value;
+            const name = document.getElementById('product-name').value;
+            const category = document.getElementById('product-category').value;
+            const price = document.getElementById('product-price').value;
+
+            if (!token) {
+                resultDiv.textContent = 'Error: Please enter your auth token';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            resultDiv.textContent = 'Creating product...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        category: category,
+                        base_price: price,
+                        description: 'Test product from diagnostic tool',
+                        is_active: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                resultDiv.textContent = `Status: ${response.status}\n\n` + JSON.stringify(data, null, 2);
+                resultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testDatabaseInfo() {
+            const resultDiv = document.getElementById('db-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_URL}/test/db-info`);
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Auto-fill token from localStorage if available
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+            if (token) {
+                document.getElementById('token').value = token;
+            }
+        });
+    </script>
+</body>
+</html>

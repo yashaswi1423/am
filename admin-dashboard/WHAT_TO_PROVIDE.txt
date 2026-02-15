@@ -1,0 +1,117 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              WHAT YOU NEED TO PROVIDE - QUICK LIST               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+You need to provide 3 pieces of information:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  EMAIL_USER (Gmail that SENDS approval emails)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+What: A Gmail account for your store
+Example: mystore.notifications@gmail.com
+Purpose: This email will SEND the approval requests
+
+Recommendation:
+→ Create a NEW Gmail specifically for your store
+→ Don't use your personal email
+→ Name it something like: [yourstore]notifications@gmail.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2️⃣  EMAIL_PASSWORD (App Password for above Gmail)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+What: A 16-character code from Google
+Example: abcd efgh ijkl mnop
+Purpose: Allows the system to send emails
+
+⚠️ IMPORTANT: This is NOT your regular Gmail password!
+
+How to get it:
+1. Go to: https://myaccount.google.com/security
+2. Enable "2-Step Verification"
+3. Go to: https://myaccount.google.com/apppasswords
+4. Select: Mail + Windows Computer
+5. Click "Generate"
+6. Copy the 16-character password
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3️⃣  ADMIN_EMAIL (Where YOU receive approval requests)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+What: YOUR personal email address
+Example: owner@gmail.com or yourname@gmail.com
+Purpose: Where YOU will RECEIVE approval requests
+
+Recommendation:
+→ Use an email you check frequently
+→ Can be your personal Gmail
+→ Install Gmail app on phone for instant notifications
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 EXAMPLE CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Let's say your store is "AM Fashions":
+
+EMAIL_USER=amfashions.notifications@gmail.com
+↑ New Gmail you create for the store
+
+EMAIL_PASSWORD=abcd efgh ijkl mnop
+↑ App Password from Google (16 characters)
+
+ADMIN_EMAIL=yourname@gmail.com
+↑ Your personal email where you receive alerts
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 WHAT TO DO NEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Gather the 3 pieces of information above
+
+2. Open file: am/admin-dashboard/server/.env
+
+3. Update these 3 lines:
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASSWORD=your-app-password
+   ADMIN_EMAIL=admin@yourstore.com
+
+4. Save the file
+
+5. Follow the complete setup guide in:
+   APPROVAL_SYSTEM_SETUP.txt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❓ COMMON QUESTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q: Can I use the same email for all 3?
+A: No! EMAIL_USER and ADMIN_EMAIL should be different.
+   EMAIL_USER = Store's email (sends)
+   ADMIN_EMAIL = Your email (receives)
+
+Q: Do I need to create a new Gmail?
+A: Recommended but not required. You can use existing Gmail
+   as EMAIL_USER, but create a dedicated one for business.
+
+Q: What if I don't have Gmail?
+A: Gmail is easiest. But you can use Outlook, Yahoo, etc.
+   You'll need to update the email service configuration.
+
+Q: Is this secure?
+A: Yes! Very secure. Even if someone knows the password,
+   they can't login without YOUR approval via email.
+
+Q: Can I approve from my phone?
+A: Yes! Install Gmail app, enable notifications, and
+   approve logins from anywhere!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ready to set up? Follow: APPROVAL_SYSTEM_SETUP.txt

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Inventory API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #result {
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Inventory API Endpoints</h1>
+    <p>Make sure your backend server is running on http://localhost:5000</p>
+    
+    <div>
+        <button onclick="testGetProducts()">Test GET /api/products</button>
+        <button onclick="testHealthCheck()">Test Health Check</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        const resultDiv = document.getElementById('result');
+
+        function showResult(title, data, isError = false) {
+            const className = isError ? 'error' : 'success';
+            resultDiv.innerHTML = `
+                <div class="${className}">
+                    <h3>${title}</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        async function testHealthCheck() {
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                showResult('✅ Health Check Success', data);
+            } catch (error) {
+                showResult('❌ Health Check Failed', { error: error.message }, true);
+            }
+        }
+
+        async function testGetProducts() {
+            try {
+                const response = await fetch(`${API_URL}/api/products`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ GET Products Success', {
+                        status: response.status,
+                        productsCount: data.data?.length || 0,
+                        data: data
+                    });
+                } else {
+                    showResult('❌ GET Products Failed', data, true);
+                }
+            } catch (error) {
+                showResult('❌ GET Products Failed', { 
+                    error: error.message,
+                    note: 'Make sure backend is running and CORS is enabled'
+                }, true);
+            }
+        }
+
+        // Auto-run health check on load
+        window.onload = () => {
+            testHealthCheck();
+        };
+    </script>
+</body>
+</html>

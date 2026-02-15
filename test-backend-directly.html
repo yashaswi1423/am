@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Backend Order Creation</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        button { background: #4CAF50; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #45a049; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; }
+        .success { background: #e8f5e9; border: 1px solid #4CAF50; }
+        .error { background: #ffebee; border: 1px solid #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Backend Order Creation</h1>
+        <p>This will test if your backend can save orders to Supabase.</p>
+        
+        <button onclick="testOrderCreation()">Create Test Order</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://am-seven-coral.vercel.app/api';
+
+        async function testOrderCreation() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Testing... Please wait...</div>';
+
+            try {
+                // Step 1: Create customer
+                console.log('Step 1: Creating customer...');
+                const customerResponse = await fetch(`${BACKEND_URL}/customers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test' + Date.now() + '@example.com',
+                        password_hash: 'test_customer',
+                        first_name: 'Test',
+                        last_name: 'User',
+                        phone: '9999999999',
+                        address_line1: 'Test Address',
+                        city: 'Test City',
+                        state: 'Test State',
+                        postal_code: '123456',
+                        country: 'India'
+                    })
+                });
+
+                if (!customerResponse.ok) {
+                    throw new Error(`Customer creation failed: ${customerResponse.status} ${customerResponse.statusText}`);
+                }
+
+                const customerData = await customerResponse.json();
+                const customer = customerData.data || customerData;
+                console.log('Customer created:', customer);
+
+                // Step 2: Create order
+                console.log('Step 2: Creating order...');
+                const orderResponse = await fetch(`${BACKEND_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_id: customer.customer_id,
+                        order_status: 'pending',
+                        payment_status: 'pending',
+                        subtotal: 999,
+                        discount_amount: 0,
+                        tax_amount: 0,
+                        shipping_cost: 0,
+                        total_amount: 999,
+                        shipping_address: 'Test Address, Test City, Test State 123456',
+                        billing_address: 'Test Address, Test City, Test State 123456',
+                        items: [
+                            {
+                                product_name: 'Test Product',
+                                variant_details: 'Size: M, Color: Blue',
+                                quantity: 1,
+                                unit_price: 999,
+                                subtotal: 999
+                            }
+                        ],
+                        payment_method: 'test'
+                    })
+                });
+
+                if (!orderResponse.ok) {
+                    const errorText = await orderResponse.text();
+                    throw new Error(`Order creation failed: ${orderResponse.status} ${errorResponse.statusText}\n${errorText}`);
+                }
+
+                const orderData = await orderResponse.json();
+                console.log('Order created:', orderData);
+
+                // Success!
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ SUCCESS! Order created successfully!
+                        
+                        Customer ID: ${customer.customer_id}
+                        Order ID: ${orderData.data.order_id}
+                        Order Number: ${orderData.data.order_number}
+                        
+                        Now check:
+                        1. Supabase orders table - refresh it
+                        2. Admin dashboard - check if order appears
+                        
+                        If the order appears in Supabase but NOT in admin dashboard,
+                        then the admin dashboard is using the wrong backend URL.
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ ERROR: ${error.message}
+                        
+                        Check browser console (F12) for more details.
+                        
+                        Common issues:
+                        - Backend not deployed
+                        - Database credentials wrong
+                        - CORS issues
+                        - Network problems
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

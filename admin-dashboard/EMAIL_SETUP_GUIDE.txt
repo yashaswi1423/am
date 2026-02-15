@@ -1,0 +1,162 @@
+========================================
+EMAIL NOTIFICATION SETUP GUIDE
+========================================
+
+This guide will help you set up email notifications for admin login alerts.
+
+========================================
+STEP 1: CHOOSE EMAIL PROVIDER
+========================================
+
+The system is configured to use Gmail by default, but you can use any email provider.
+
+For Gmail:
+- You need a Gmail account
+- You must enable "App Passwords" (2-Step Verification required)
+
+For other providers (Outlook, Yahoo, etc.):
+- Update the service name in emailService.js
+- Use appropriate SMTP settings
+
+========================================
+STEP 2: GMAIL SETUP (RECOMMENDED)
+========================================
+
+1. Go to your Google Account: https://myaccount.google.com/
+
+2. Enable 2-Step Verification:
+   - Go to Security → 2-Step Verification
+   - Follow the setup process
+
+3. Create App Password:
+   - Go to Security → 2-Step Verification → App passwords
+   - Select "Mail" and "Windows Computer" (or Other)
+   - Click "Generate"
+   - Copy the 16-character password (example: abcd efgh ijkl mnop)
+
+========================================
+STEP 3: UPDATE .ENV FILE
+========================================
+
+Open: am/admin-dashboard/server/.env
+
+Update these lines with your actual values:
+
+EMAIL_USER=your-actual-email@gmail.com
+EMAIL_PASSWORD=your-16-char-app-password
+ADMIN_EMAIL=where-to-receive-alerts@gmail.com
+
+Example:
+EMAIL_USER=mystore@gmail.com
+EMAIL_PASSWORD=abcd efgh ijkl mnop
+ADMIN_EMAIL=owner@gmail.com
+
+========================================
+STEP 4: RESTART BACKEND SERVER
+========================================
+
+After updating .env file:
+
+1. Stop the backend server (Ctrl+C in the terminal)
+2. Start it again: npm start
+
+Or if using the process manager, restart process ID 6.
+
+========================================
+STEP 5: TEST THE SYSTEM
+========================================
+
+1. Go to: http://localhost:3000/admin/login
+
+2. Login with:
+   Username: admin
+   Password: admin123
+
+3. Check your ADMIN_EMAIL inbox for the notification
+
+========================================
+EMAIL NOTIFICATION INCLUDES:
+========================================
+
+✅ Username who logged in
+✅ Date and time of login
+✅ IP address
+✅ Device/browser information
+✅ Security warning if unauthorized
+
+========================================
+TROUBLESHOOTING
+========================================
+
+Problem: Email not received
+Solution:
+- Check spam/junk folder
+- Verify EMAIL_USER and EMAIL_PASSWORD are correct
+- Ensure App Password is used (not regular password)
+- Check backend console for error messages
+
+Problem: "Invalid login" error
+Solution:
+- Gmail: Make sure you're using App Password, not regular password
+- Check 2-Step Verification is enabled
+- Try generating a new App Password
+
+Problem: Backend shows email error
+Solution:
+- Check internet connection
+- Verify email credentials in .env
+- Check if Gmail account is active
+- Review backend console logs
+
+========================================
+USING OTHER EMAIL PROVIDERS
+========================================
+
+For Outlook/Hotmail:
+service: 'hotmail'
+auth: {
+  user: 'your-email@outlook.com',
+  pass: 'your-password'
+}
+
+For Yahoo:
+service: 'yahoo'
+auth: {
+  user: 'your-email@yahoo.com',
+  pass: 'your-app-password'
+}
+
+For Custom SMTP:
+Remove 'service' and add:
+host: 'smtp.yourdomain.com',
+port: 587,
+secure: false,
+auth: {
+  user: 'your-email@yourdomain.com',
+  pass: 'your-password'
+}
+
+Update these in: am/admin-dashboard/server/services/emailService.js
+
+========================================
+SECURITY NOTES
+========================================
+
+⚠️ IMPORTANT:
+- Never commit .env file to Git
+- Keep App Passwords secure
+- Use different passwords for different apps
+- Regularly review login notifications
+- Change passwords if suspicious activity detected
+
+========================================
+SUPPORT
+========================================
+
+If you need help:
+1. Check backend console logs
+2. Verify all credentials are correct
+3. Test with a simple Gmail account first
+4. Check firewall/antivirus settings
+
+========================================
