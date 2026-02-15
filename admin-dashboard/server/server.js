@@ -1,5 +1,6 @@
 // server.js
-// Updated: 2026-02-15 23:06 - Force deployment v1.0.2 - Fixed product validation
+// Updated: 2026-02-15 23:30 - Force deployment v1.0.3 - Cache bust
+// AM Fashions Backend API Server
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';

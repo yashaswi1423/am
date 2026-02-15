@@ -1,5 +1,6 @@
 // Vercel serverless entry point
-// Updated: 2026-02-15 - Fixed inventory validation
+// Updated: 2026-02-15 23:30 - Force rebuild v1.0.3
+// AM Fashions Backend API - Serverless Function
 import app from './server.js';
 
 // Export the Express app as a Vercel serverless function

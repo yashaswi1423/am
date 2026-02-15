@@ -42,7 +42,7 @@
         },
         {
           "key": "X-Backend-Version",
-          "value": "1.0.2"
+          "value": "1.0.3"
         },
         {
           "key": "Cache-Control",

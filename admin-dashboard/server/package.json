@@ -1,7 +1,7 @@
 {
   "name": "admin-dashboard-server",
-  "version": "1.0.1",
-  "description": "Backend API for admin dashboard - Fixed inventory validation",
+  "version": "1.0.3",
+  "description": "Backend API for admin dashboard - Product validation fixed",
   "main": "server.js",
   "type": "module",
   "scripts": {

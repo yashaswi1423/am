@@ -1,0 +1,4 @@
+Deployment Trigger v1.0.3
+Timestamp: 2026-02-15 23:30
+Changes: Force cache bust and rebuild
+Purpose: Ensure latest product validation code is deployed
