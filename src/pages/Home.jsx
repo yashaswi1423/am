@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductModal from '../components/ProductModal';
 import axios from 'axios';
@@ -17,9 +17,79 @@ const Home = ({ addToCart }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const mobileOffersRef = useRef(null);
+  const autoScrollInterval = useRef(null);
 
   useEffect(() => {
     fetchProducts();
+  }, []);
+
+  // Auto-scroll for mobile offers
+  useEffect(() => {
+    const scrollContainer = mobileOffersRef.current;
+    if (!scrollContainer) return;
+
+    let isUserInteracting = false;
+    let scrollTimeout;
+
+    const startAutoScroll = () => {
+      if (autoScrollInterval.current) return;
+      
+      autoScrollInterval.current = setInterval(() => {
+        if (!isUserInteracting && scrollContainer) {
+          const cardWidth = scrollContainer.children[0]?.offsetWidth || 0;
+          const gap = 16; // 4 * 4px (gap-4)
+          const scrollAmount = cardWidth + gap;
+          const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+          
+          if (scrollContainer.scrollLeft >= maxScroll - 10) {
+            // Reset to start
+            scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            // Scroll to next card
+            scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+          }
+        }
+      }, 3000); // Auto-scroll every 3 seconds
+    };
+
+    const stopAutoScroll = () => {
+      if (autoScrollInterval.current) {
+        clearInterval(autoScrollInterval.current);
+        autoScrollInterval.current = null;
+      }
+    };
+
+    const handleTouchStart = () => {
+      isUserInteracting = true;
+      stopAutoScroll();
+    };
+
+    const handleTouchEnd = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        isUserInteracting = false;
+        startAutoScroll();
+      }, 2000); // Resume auto-scroll 2 seconds after user stops interacting
+    };
+
+    scrollContainer.addEventListener('touchstart', handleTouchStart);
+    scrollContainer.addEventListener('touchend', handleTouchEnd);
+    scrollContainer.addEventListener('mousedown', handleTouchStart);
+    scrollContainer.addEventListener('mouseup', handleTouchEnd);
+
+    startAutoScroll();
+
+    return () => {
+      stopAutoScroll();
+      clearTimeout(scrollTimeout);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('touchstart', handleTouchStart);
+        scrollContainer.removeEventListener('touchend', handleTouchEnd);
+        scrollContainer.removeEventListener('mousedown', handleTouchStart);
+        scrollContainer.removeEventListener('mouseup', handleTouchEnd);
+      }
+    };
   }, []);
 
   const fetchProducts = async () => {
@@ -172,9 +242,13 @@ const Home = ({ addToCart }) => {
           </div>
         </div>
 
-        {/* Mobile: Touch-scrollable horizontal scroll */}
+        {/* Mobile: Touch-scrollable horizontal scroll with auto-scroll */}
         <div className="md:hidden px-6 w-full">
-          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div 
+            ref={mobileOffersRef}
+            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4" 
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             {offerImages.map((image, imgIndex) => (
               <div key={imgIndex} className="flex-shrink-0 w-[85vw] rounded-3xl overflow-hidden shadow-2xl group relative snap-center">
                 <img
