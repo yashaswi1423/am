@@ -56,15 +56,15 @@ const Inventory = () => {
         setCategories(response.data.data);
         // Set default category to first active category
         if (response.data.data.length > 0 && !formData.category) {
-          setFormData(prev => ({ ...prev, category: response.data.data[0].name }));
+          setFormData(prev => ({ ...prev, category: response.data.data[0].category_name }));
         }
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
       // Fallback to default categories if API fails
       const fallbackCategories = [
-        { name: 'T-Shirts' }, { name: 'Shirts' }, { name: 'Cargo' }, 
-        { name: 'Shorts' }, { name: 'Track pants' }
+        { category_name: 'T-Shirts' }, { category_name: 'Shirts' }, { category_name: 'Cargo' }, 
+        { category_name: 'Shorts' }, { category_name: 'Track pants' }
       ];
       setCategories(fallbackCategories);
     }
@@ -93,7 +93,7 @@ const Inventory = () => {
       setFormData({
         name: product.product_name || product.name || '',
         description: product.description || '',
-        category: product.category || (categories.length > 0 ? categories[0].name : ''),
+        category: product.category || (categories.length > 0 ? categories[0].category_name : ''),
         base_price: product.base_price || '',
         is_active: product.is_active !== false
       });
@@ -109,7 +109,7 @@ const Inventory = () => {
     setFormData({
       name: '',
       description: '',
-      category: categories.length > 0 ? categories[0].name : '',
+      category: categories.length > 0 ? categories[0].category_name : '',
       base_price: '',
       is_active: true
     });
@@ -498,7 +498,7 @@ const Inventory = () => {
                         <option value="">Loading categories...</option>
                       ) : (
                         categories.map(cat => (
-                          <option key={cat.category_id} value={cat.name}>{cat.name}</option>
+                          <option key={cat.category_id} value={cat.category_name}>{cat.category_name}</option>
                         ))
                       )}
                     </select>
