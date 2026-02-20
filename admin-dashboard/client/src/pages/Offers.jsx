@@ -30,7 +30,7 @@ const Offers = () => {
     try {
       setLoading(true)
       setError(null)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token')
       const res = await axios.get(`${API_URL}/offers`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -52,7 +52,7 @@ const Offers = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this offer?')) {
       try {
-        const token = localStorage.getItem('token')
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token')
         const response = await axios.delete(`${API_URL}/offers/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -70,7 +70,7 @@ const Offers = () => {
     e.preventDefault()
     
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token')
       const payload = {
         ...formData,
         original_price: parseFloat(formData.original_price),

@@ -9,7 +9,9 @@ import {
   Sparkles,
   CreditCard,
   Package,
-  Tag
+  Tag,
+  FolderOpen,
+  Settings as SettingsIcon
 } from 'lucide-react'
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -18,9 +20,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Orders', path: '/orders', icon: ShoppingCart },
     { name: 'Inventory', path: '/inventory', icon: Package },
     { name: 'Offers', path: '/offers', icon: Tag },
+    { name: 'Categories', path: '/categories', icon: FolderOpen },
     { name: 'Customers', path: '/customers', icon: Users },
     { name: 'Payment Verifications', path: '/payment-verifications', icon: CreditCard },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { name: 'Settings', path: '/settings', icon: SettingsIcon },
   ]
 
   const handleMenuItemClick = () => {

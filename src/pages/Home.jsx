@@ -5,19 +5,15 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-const categories = [
-  'T-Shirts', 'Shirts', 'Cargo', 'Shorts', 'Track pants', 'Coats',
-  'Wallets', 'Jackets', 'Trousers', 'Night wear', 'Hoodies',
-  'Gym wear', 'Sleepwear sets', 'Sweatshirts', 'Jeans'
-];
-
 const Home = ({ addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const navigate = useNavigate();
   const mobileOffersRef = useRef(null);
   const autoScrollInterval = useRef(null);
@@ -25,6 +21,7 @@ const Home = ({ addToCart }) => {
   useEffect(() => {
     fetchProducts();
     fetchOffers();
+    fetchCategories();
   }, []);
 
   // Auto-scroll for mobile offers
@@ -146,6 +143,28 @@ const Home = ({ addToCart }) => {
       setOffers([]);
     } finally {
       setOffersLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await axios.get(`${API_URL}/categories?is_active=true`);
+      if (response.data.success) {
+        // Extract category names from the response
+        const categoryNames = response.data.data.map(cat => cat.category_name);
+        setCategories(categoryNames);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to default categories if API fails
+      setCategories([
+        'T-Shirts', 'Shirts', 'Cargo', 'Shorts', 'Track pants', 'Coats',
+        'Wallets', 'Jackets', 'Trousers', 'Night wear', 'Hoodies',
+        'Gym wear', 'Sleepwear sets', 'Sweatshirts', 'Jeans'
+      ]);
+    } finally {
+      setCategoriesLoading(false);
     }
   };
 

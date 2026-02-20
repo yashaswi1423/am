@@ -9,6 +9,8 @@ import Customers from './pages/Customers'
 import Analytics from './pages/Analytics'
 import PaymentVerifications from './pages/PaymentVerifications'
 import Offers from './pages/Offers'
+import Categories from './pages/Categories'
+import Settings from './pages/Settings'
 import Login from './pages/Login'
 
 function App() {
@@ -98,10 +100,12 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/products" element={<Products />} />
             <Route path="/inventory" element={<Inventory />} />
+            <Route path="/offers" element={<Offers />} />
+            <Route path="/categories" element={<Categories />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/payment-verifications" element={<PaymentVerifications />} />
-            <Route path="/offers" element={<Offers />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
       </div>

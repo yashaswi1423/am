@@ -39,7 +39,7 @@ export const verifyToken = async (req, res, next) => {
       const approvalQuery = `
         SELECT username, status, expires_at
         FROM login_requests
-        WHERE request_token = ? AND status = 'approved'
+        WHERE request_token = $1 AND status = 'approved'
       `;
       
       const approval = await db.getOne(approvalQuery, [token]);
@@ -72,7 +72,7 @@ export const verifyToken = async (req, res, next) => {
 
     // Check if user exists in database
     const user = await db.getOne(
-      'SELECT id, email, role, status FROM admins WHERE id = ?',
+      'SELECT id, email, role, status FROM admins WHERE id = $1',
       [decoded.id]
     );
 
@@ -167,7 +167,7 @@ export const optionalAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const user = await db.getOne(
-      'SELECT id, email, role, status FROM admins WHERE id = ?',
+      'SELECT id, email, role, status FROM admins WHERE id = $1',
       [decoded.id]
     );
 
@@ -208,7 +208,7 @@ export const verifyRefreshToken = async (req, res, next) => {
     const decoded = jwt.verify(refreshToken, JWT_SECRET);
 
     const user = await db.getOne(
-      'SELECT id, email, role, status FROM admins WHERE id = ?',
+      'SELECT id, email, role, status FROM admins WHERE id = $1',
       [decoded.id]
     );
 
