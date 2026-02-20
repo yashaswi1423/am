@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { productsAPI } from '../services/api';
+import axios from 'axios';
 import { 
   Plus, 
   Edit, 
@@ -22,12 +23,13 @@ const Inventory = () => {
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [error, setError] = useState(null);
+  const [categories, setCategories] = useState([]);
   
   // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'T-Shirts',
+    category: '',
     base_price: '',
     is_active: true
   });
@@ -37,18 +39,36 @@ const Inventory = () => {
   const [newImageUrl, setNewImageUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   
-  const categories = [
-    'T-Shirts', 'Shirts', 'Cargo', 'Shorts', 'Track pants', 'Coats',
-    'Wallets', 'Jackets', 'Trousers', 'Night wear', 'Hoodies',
-    'Gym wear', 'Sleepwear sets', 'Sweatshirts', 'Jeans'
-  ];
-  
   const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
   const colors = ['Black', 'White', 'Grey', 'Blue', 'Red', 'Green', 'Yellow', 'Pink', 'Brown', 'Navy'];
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get('/api/categories', {
+        params: { is_active: true }
+      });
+      if (response.data.success) {
+        setCategories(response.data.data);
+        // Set default category to first active category
+        if (response.data.data.length > 0 && !formData.category) {
+          setFormData(prev => ({ ...prev, category: response.data.data[0].name }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to default categories if API fails
+      const fallbackCategories = [
+        { name: 'T-Shirts' }, { name: 'Shirts' }, { name: 'Cargo' }, 
+        { name: 'Shorts' }, { name: 'Track pants' }
+      ];
+      setCategories(fallbackCategories);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -73,7 +93,7 @@ const Inventory = () => {
       setFormData({
         name: product.product_name || product.name || '',
         description: product.description || '',
-        category: product.category || 'T-Shirts',
+        category: product.category || (categories.length > 0 ? categories[0].name : ''),
         base_price: product.base_price || '',
         is_active: product.is_active !== false
       });
@@ -89,7 +109,7 @@ const Inventory = () => {
     setFormData({
       name: '',
       description: '',
-      category: 'T-Shirts',
+      category: categories.length > 0 ? categories[0].name : '',
       base_price: '',
       is_active: true
     });
@@ -474,9 +494,13 @@ const Inventory = () => {
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                     >
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
+                      {categories.length === 0 ? (
+                        <option value="">Loading categories...</option>
+                      ) : (
+                        categories.map(cat => (
+                          <option key={cat.category_id} value={cat.name}>{cat.name}</option>
+                        ))
+                      )}
                     </select>
                   </div>
 
