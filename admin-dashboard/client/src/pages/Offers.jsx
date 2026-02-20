@@ -149,15 +149,15 @@ const Offers = () => {
 
   return (
     <div>
-      <h1 className="page-title mb-6">Offers Management</h1>
+      <h1 className="page-title mb-6 text-black">Offers Management</h1>
       
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">All Offers ({offers.length})</h2>
+          <h2 className="text-xl font-bold text-black">All Offers ({offers.length})</h2>
           <div className="flex space-x-2">
             <button 
               onClick={fetchOffers}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors"
+              className="bg-gray-100 text-black px-4 py-2 rounded hover:bg-gray-200 transition-colors"
             >
               Refresh
             </button>
@@ -172,7 +172,7 @@ const Offers = () => {
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-black">
             {error}
           </div>
         )}
@@ -181,21 +181,21 @@ const Offers = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Name</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Original Price</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Offer Price</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Discount</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Stock</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">ID</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">Original Price</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">Offer Price</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">Discount</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">Stock</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-black">Actions</th>
               </tr>
             </thead>
             <tbody>
               {offers.length > 0 ? (
                 offers.map((offer) => (
                   <tr key={offer.offer_id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm text-gray-800">{offer.offer_id}</td>
+                    <td className="px-4 py-4 text-sm text-black">{offer.offer_id}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center space-x-3">
                         {offer.image_url || (offer.images && offer.images.length > 0) ? (
@@ -210,14 +210,14 @@ const Offers = () => {
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-medium text-gray-800">{offer.offer_name}</p>
+                          <p className="text-sm font-medium text-black">{offer.offer_name}</p>
                           {offer.is_featured && (
                             <span className="text-xs text-blue-600">Featured</span>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-600 line-through">
+                    <td className="px-4 py-4 text-sm text-black line-through">
                       ₹{parseFloat(offer.original_price).toFixed(2)}
                     </td>
                     <td className="px-4 py-4 text-sm font-semibold text-green-600">
@@ -228,7 +228,7 @@ const Offers = () => {
                         {parseFloat(offer.discount_percentage || 0).toFixed(0)}% OFF
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-600">
+                    <td className="px-4 py-4 text-sm text-black">
                       {offer.stock_quantity}
                     </td>
                     <td className="px-4 py-4">
@@ -262,7 +262,7 @@ const Offers = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan="8" className="px-4 py-8 text-center text-black">
                     No offers found
                   </td>
                 </tr>
@@ -277,7 +277,7 @@ const Offers = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-2xl font-bold text-black">
                 {editingOffer ? 'Edit Offer' : 'Add New Offer'}
               </h2>
               <button
@@ -290,7 +290,7 @@ const Offers = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Offer Name *
                 </label>
                 <input
@@ -298,19 +298,19 @@ const Offers = () => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                   placeholder="e.g., Winter Special Combo"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Description
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                   rows="3"
                   placeholder="Describe the offer..."
                 />
@@ -318,7 +318,7 @@ const Offers = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Original Price (₹) *
                   </label>
                   <input
@@ -328,13 +328,13 @@ const Offers = () => {
                     min="0"
                     value={formData.original_price}
                     onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="1600"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Offer Price (₹) *
                   </label>
                   <input
@@ -344,7 +344,7 @@ const Offers = () => {
                     min="0"
                     value={formData.offer_price}
                     onChange={(e) => setFormData({ ...formData, offer_price: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="999"
                   />
                 </div>
@@ -352,12 +352,12 @@ const Offers = () => {
 
               {formData.original_price && formData.offer_price && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-sm text-green-800">
+                  <p className="text-sm text-black">
                     Discount: <span className="font-bold">
                       {calculateDiscount(parseFloat(formData.original_price), parseFloat(formData.offer_price))}% OFF
                     </span>
                   </p>
-                  <p className="text-sm text-green-800">
+                  <p className="text-sm text-black">
                     Savings: <span className="font-bold">
                       ₹{(parseFloat(formData.original_price) - parseFloat(formData.offer_price)).toFixed(2)}
                     </span>
@@ -367,7 +367,7 @@ const Offers = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Stock Quantity
                   </label>
                   <input
@@ -375,34 +375,34 @@ const Offers = () => {
                     min="0"
                     value={formData.stock_quantity}
                     onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Category
                   </label>
                   <input
                     type="text"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="Special Offers"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Valid Until (Optional)
                 </label>
                 <input
                   type="date"
                   value={formData.valid_until}
                   onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 />
               </div>
 
@@ -414,7 +414,7 @@ const Offers = () => {
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Active</span>
+                  <span className="text-sm text-black">Active</span>
                 </label>
 
                 <label className="flex items-center space-x-2">
@@ -424,7 +424,7 @@ const Offers = () => {
                     onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Featured</span>
+                  <span className="text-sm text-black">Featured</span>
                 </label>
               </div>
 
@@ -432,7 +432,7 @@ const Offers = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="flex-1 bg-gray-200 text-black px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
                 >
                   Cancel
                 </button>
