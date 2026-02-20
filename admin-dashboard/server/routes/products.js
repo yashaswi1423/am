@@ -13,6 +13,9 @@ import {
   updateVariant,
   deleteVariant,
   updateVariantStock,
+  addBulkPricing,
+  updateBulkPricing,
+  deleteBulkPricing,
   upload
 } from '../controllers/productsController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
@@ -36,5 +39,10 @@ router.post('/:id/variants', authenticateToken, createVariant);
 router.put('/variants/:id', authenticateToken, updateVariant);
 router.delete('/variants/:id', authenticateToken, deleteVariant);
 router.patch('/variants/:id/stock', authenticateToken, updateVariantStock);
+
+// Bulk pricing routes
+router.post('/:id/bulk-pricing', authenticateToken, addBulkPricing);
+router.put('/bulk-pricing/:id', authenticateToken, updateBulkPricing);
+router.delete('/bulk-pricing/:id', authenticateToken, deleteBulkPricing);
 
 export default router;

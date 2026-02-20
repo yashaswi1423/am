@@ -23,21 +23,26 @@ export const upload = multer({
 export const getAllProducts = async (req, res) => {
   try {
     const { category, is_active } = req.query;
-    
+
     let query = `
-      SELECT 
+      SELECT
         p.*,
         COALESCE(
-          json_agg(jsonb_build_object(
+          json_agg(DISTINCT jsonb_build_object(
             'image_id', pi.image_id,
             'image_url', pi.image_url,
             'display_order', pi.display_order,
             'is_primary', pi.is_primary
-          ) ORDER BY pi.display_order) FILTER (WHERE pi.image_id IS NOT NULL),
+          ) ORDER BY jsonb_build_object(
+            'image_id', pi.image_id,
+            'image_url', pi.image_url,
+            'display_order', pi.display_order,
+            'is_primary', pi.is_primary
+          )) FILTER (WHERE pi.image_id IS NOT NULL),
           '[]'
         ) as images,
         COALESCE(
-          json_agg(jsonb_build_object(
+          json_agg(DISTINCT jsonb_build_object(
             'variant_id', pv.variant_id,
             'color', pv.color,
             'size', pv.size,
@@ -47,13 +52,30 @@ export const getAllProducts = async (req, res) => {
             'is_available', pv.is_available
           )) FILTER (WHERE pv.variant_id IS NOT NULL),
           '[]'
-        ) as variants
+        ) as variants,
+        COALESCE(
+          json_agg(DISTINCT jsonb_build_object(
+            'bulk_pricing_id', bp.bulk_pricing_id,
+            'min_quantity', bp.min_quantity,
+            'price_per_unit', bp.price_per_unit,
+            'display_text', bp.display_text,
+            'is_active', bp.is_active
+          ) ORDER BY jsonb_build_object(
+            'bulk_pricing_id', bp.bulk_pricing_id,
+            'min_quantity', bp.min_quantity,
+            'price_per_unit', bp.price_per_unit,
+            'display_text', bp.display_text,
+            'is_active', bp.is_active
+          )) FILTER (WHERE bp.bulk_pricing_id IS NOT NULL AND bp.is_active = true),
+          '[]'
+        ) as bulk_pricing
       FROM products p
       LEFT JOIN product_images pi ON p.product_id = pi.product_id
       LEFT JOIN product_variants pv ON p.product_id = pv.product_id
+      LEFT JOIN bulk_pricing bp ON p.product_id = bp.product_id
       WHERE 1=1
     `;
-    
+
     const params = [];
     if (category) {
       params.push(category);
@@ -63,17 +85,17 @@ export const getAllProducts = async (req, res) => {
       params.push(is_active === 'true');
       query += ` AND p.is_active = $${params.length}`;
     }
-    
+
     query += ` GROUP BY p.product_id ORDER BY p.created_at DESC`;
-    
+
     const products = await db.getMany(query, params);
-    
+
     res.json({ success: true, data: products });
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-};
+}
 
 /* ===========================
    GET /api/products/:id
@@ -435,3 +457,78 @@ export const updateVariantStock = async (req, res) => {
   }
 };
 
+
+/* ===========================
+   POST /api/products/:id/bulk-pricing
+   Add bulk pricing to a product
+=========================== */
+export const addBulkPricing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { min_quantity, price_per_unit, total_price, display_text } = req.body;
+    
+    if (!min_quantity || !total_price) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'min_quantity and total_price are required' 
+      });
+    }
+    
+    const calculatedPricePerUnit = total_price / min_quantity;
+    const calculatedDisplayText = display_text || `${min_quantity} for ₹${total_price}`;
+    
+    const bulkPricing = await db.insert(
+      `INSERT INTO bulk_pricing (product_id, min_quantity, price_per_unit, display_text, is_active)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [id, min_quantity, calculatedPricePerUnit, calculatedDisplayText, true]
+    );
+    
+    res.status(201).json({ success: true, data: bulkPricing });
+  } catch (error) {
+    console.error('Add bulk pricing error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/* ===========================
+   PUT /api/products/bulk-pricing/:id
+   Update bulk pricing
+=========================== */
+export const updateBulkPricing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { min_quantity, price_per_unit, total_price, display_text, is_active } = req.body;
+    
+    const calculatedPricePerUnit = total_price ? total_price / min_quantity : price_per_unit;
+    const calculatedDisplayText = display_text || `${min_quantity} for ₹${total_price || (price_per_unit * min_quantity)}`;
+    
+    await db.update(
+      `UPDATE bulk_pricing
+       SET min_quantity = $1, price_per_unit = $2, display_text = $3, is_active = $4
+       WHERE bulk_pricing_id = $5`,
+      [min_quantity, calculatedPricePerUnit, calculatedDisplayText, is_active !== false, id]
+    );
+    
+    res.json({ success: true, message: 'Bulk pricing updated successfully' });
+  } catch (error) {
+    console.error('Update bulk pricing error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/* ===========================
+   DELETE /api/products/bulk-pricing/:id
+   Delete bulk pricing
+=========================== */
+export const deleteBulkPricing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await db.deleteRecord('DELETE FROM bulk_pricing WHERE bulk_pricing_id = $1', [id]);
+    
+    res.json({ success: true, message: 'Bulk pricing deleted successfully' });
+  } catch (error) {
+    console.error('Delete bulk pricing error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
