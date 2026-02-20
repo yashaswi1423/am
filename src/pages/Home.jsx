@@ -13,7 +13,6 @@ const Home = ({ addToCart }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const navigate = useNavigate();
   const mobileOffersRef = useRef(null);
   const autoScrollInterval = useRef(null);
@@ -148,7 +147,6 @@ const Home = ({ addToCart }) => {
 
   const fetchCategories = async () => {
     try {
-      setCategoriesLoading(true);
       const response = await axios.get(`${API_URL}/categories?is_active=true`);
       if (response.data.success) {
         // Extract category names from the response
@@ -163,8 +161,6 @@ const Home = ({ addToCart }) => {
         'Wallets', 'Jackets', 'Trousers', 'Night wear', 'Hoodies',
         'Gym wear', 'Sleepwear sets', 'Sweatshirts', 'Jeans'
       ]);
-    } finally {
-      setCategoriesLoading(false);
     }
   };
 
