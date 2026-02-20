@@ -288,8 +288,8 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
             {/* Product Description */}
             <div className="pt-2 border-t">
               <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-1">Details</h3>
-              <p className="text-xs md:text-sm text-gray-600 line-clamp-2">
-                Premium quality {product.category.toLowerCase()} made with finest materials. Perfect fit and comfortable wear.
+              <p className="text-xs md:text-sm text-gray-600">
+                {product.description || `Premium quality ${product.category.toLowerCase()} made with finest materials. Perfect fit and comfortable wear.`}
               </p>
             </div>
 

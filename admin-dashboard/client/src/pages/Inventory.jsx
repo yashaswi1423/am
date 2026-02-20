@@ -35,6 +35,7 @@ const Inventory = () => {
   
   const [images, setImages] = useState([]);
   const [variants, setVariants] = useState([]);
+  const [bulkPricing, setBulkPricing] = useState([]);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   
@@ -121,6 +122,7 @@ const Inventory = () => {
     });
     setImages([]);
     setVariants([]);
+    setBulkPricing([]);
     setNewImageUrl('');
     setSelectedProduct(null);
   };
@@ -327,6 +329,24 @@ const Inventory = () => {
 
   const handleRemoveVariant = (index) => {
     setVariants(variants.filter((_, i) => i !== index));
+  };
+
+  const handleAddBulkPricing = () => {
+    setBulkPricing([...bulkPricing, {
+      min_quantity: 3,
+      total_price: 1000,
+      is_active: true
+    }]);
+  };
+
+  const handleUpdateBulkPricing = (index, field, value) => {
+    const updated = [...bulkPricing];
+    updated[index][field] = value;
+    setBulkPricing(updated);
+  };
+
+  const handleRemoveBulkPricing = (index) => {
+    setBulkPricing(bulkPricing.filter((_, i) => i !== index));
   };
 
   const handleUpdateStock = async (variantId, newStock) => {
@@ -684,6 +704,70 @@ const Inventory = () => {
                       </button>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Bulk Pricing Section */}
+              <div className="space-y-4 border-t pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Bulk Pricing (Optional)</h3>
+                    <p className="text-xs text-gray-500 mt-1">e.g., "3 for ₹1000", "5 for ₹1500"</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddBulkPricing}
+                    className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center space-x-1"
+                  >
+                    <Plus size={16} />
+                    <span>Add Bulk Price</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {bulkPricing.map((bulk, index) => (
+                    <div key={index} className="flex items-center space-x-2 p-3 bg-purple-50 rounded-lg">
+                      <div className="flex items-center space-x-2 flex-1">
+                        <input
+                          type="number"
+                          value={bulk.min_quantity}
+                          onChange={(e) => handleUpdateBulkPricing(index, 'min_quantity', parseInt(e.target.value))}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                          placeholder="Qty"
+                          min="2"
+                        />
+                        <span className="text-sm text-gray-600">for</span>
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-600 mr-1">₹</span>
+                          <input
+                            type="number"
+                            value={bulk.total_price}
+                            onChange={(e) => handleUpdateBulkPricing(index, 'total_price', parseFloat(e.target.value))}
+                            className="w-28 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                            placeholder="Total"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          (₹{bulk.total_price && bulk.min_quantity ? (bulk.total_price / bulk.min_quantity).toFixed(2) : '0'}/pc)
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBulkPricing(index)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  {bulkPricing.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      No bulk pricing added. Click "Add Bulk Price" to create quantity-based offers.
+                    </p>
+                  )}
                 </div>
               </div>
 
