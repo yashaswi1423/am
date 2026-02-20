@@ -74,6 +74,10 @@ export const productsAPI = {
   updateVariant: (variantId, data) => api.put(`/products/variants/${variantId}`, data),
   deleteVariant: (variantId) => api.delete(`/products/variants/${variantId}`),
   updateVariantStock: (variantId, data) => api.patch(`/products/variants/${variantId}/stock`, data),
+  // Bulk pricing management
+  addBulkPricing: (id, data) => api.post(`/products/${id}/bulk-pricing`, data),
+  updateBulkPricing: (bulkPricingId, data) => api.put(`/products/bulk-pricing/${bulkPricingId}`, data),
+  deleteBulkPricing: (bulkPricingId) => api.delete(`/products/bulk-pricing/${bulkPricingId}`),
   // Legacy endpoints
   updateStock: (id, variant_id, stock_quantity) => api.patch(`/products/${id}/stock`, { variant_id, stock_quantity }),
   getByCategory: (category) => api.get(`/products/category/${category}`),

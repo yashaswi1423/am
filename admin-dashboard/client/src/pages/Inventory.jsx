@@ -214,6 +214,21 @@ const Inventory = () => {
             await productsAPI.addVariant(productId, variant);
           }
           
+          // Add bulk pricing
+          for (const bulk of bulkPricing) {
+            if (bulk.min_quantity && bulk.total_price) {
+              console.log('Adding bulk pricing for product:', productId);
+              const price_per_unit = bulk.total_price / bulk.min_quantity;
+              const display_text = `${bulk.min_quantity} for ₹${bulk.total_price}`;
+              await productsAPI.addBulkPricing(productId, {
+                min_quantity: bulk.min_quantity,
+                price_per_unit: price_per_unit,
+                total_price: bulk.total_price,
+                display_text: display_text
+              });
+            }
+          }
+          
           alert('Product created successfully!');
           fetchProducts();
           setShowModal(false);
