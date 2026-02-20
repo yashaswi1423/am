@@ -180,6 +180,7 @@ import analyticsRoutes from './routes/analytics.js';
 import couponRoutes from './routes/coupons.js';
 import paymentVerificationRoutes from './routes/paymentVerification.js';
 import authRoutes from './routes/auth.js';
+import offerRoutes from './routes/offers.js';
 
 // Register routes
 app.use('/api/products', productRoutes);
@@ -190,6 +191,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/payment-verification', paymentVerificationRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/offers', offerRoutes);
 
 // ============================================
 // ERROR HANDLING

@@ -8,6 +8,7 @@ import Inventory from './pages/Inventory'
 import Customers from './pages/Customers'
 import Analytics from './pages/Analytics'
 import PaymentVerifications from './pages/PaymentVerifications'
+import Offers from './pages/Offers'
 import Login from './pages/Login'
 
 function App() {
@@ -99,6 +100,7 @@ function App() {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/payment-verifications" element={<PaymentVerifications />} />
+            <Route path="/offers" element={<Offers />} />
             <Route path="/analytics" element={<Analytics />} />
           </Routes>
         </main>

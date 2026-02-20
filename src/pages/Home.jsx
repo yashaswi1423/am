@@ -15,13 +15,16 @@ const Home = ({ addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [offersLoading, setOffersLoading] = useState(true);
   const navigate = useNavigate();
   const mobileOffersRef = useRef(null);
   const autoScrollInterval = useRef(null);
 
   useEffect(() => {
     fetchProducts();
+    fetchOffers();
   }, []);
 
   // Auto-scroll for mobile offers
@@ -116,42 +119,64 @@ const Home = ({ addToCart }) => {
     }
   };
 
+  const fetchOffers = async () => {
+    try {
+      setOffersLoading(true);
+      const response = await axios.get(`${API_URL}/offers?is_active=true`);
+      if (response.data.success) {
+        // Transform database offers to match the expected format
+        const transformedOffers = response.data.data.map(offer => ({
+          id: offer.offer_id,
+          name: offer.offer_name,
+          description: offer.description,
+          originalPrice: parseFloat(offer.original_price),
+          offerPrice: parseFloat(offer.offer_price),
+          discount: parseFloat(offer.discount_percentage || 0),
+          stock: offer.stock_quantity,
+          image: offer.image_url || (offer.images && offer.images.length > 0 ? offer.images[0].image_url : null),
+          images: offer.images ? offer.images.map(img => img.image_url) : [],
+          category: offer.category || 'Special Offers',
+          variants: offer.variants || []
+        }));
+        setOffers(transformedOffers);
+      }
+    } catch (error) {
+      console.error('Error fetching offers:', error);
+      // Fallback to empty array if API fails
+      setOffers([]);
+    } finally {
+      setOffersLoading(false);
+    }
+  };
+
   const filteredProducts = selectedCategory === 'All'
     ? products
     : products.filter(product => product.category === selectedCategory);
 
-  const offerImages = [
-    "/WhatsApp Image 2026-02-04 at 8.58.32 AM.jpeg",
-    "/WhatsApp Image 2026-02-04 at 8.58.32 AM (1).jpeg",
-    "/WhatsApp Image 2026-02-04 at 8.58.33 AM.jpeg",
-    "/WhatsApp Image 2026-02-04 at 8.58.33 AM (1).jpeg",
-    "/WhatsApp Image 2026-02-04 at 8.58.33 AM (2).jpeg",
-    "/WhatsApp Image 2026-02-04 at 8.58.33 AM (3).jpeg",
-    "/WhatsApp Image 2026-02-04 at 8.58.34 AM (1).jpeg"
-  ];
-
-  const handleOfferAddToCart = (index) => {
+  const handleOfferAddToCart = (offer) => {
     const offerProduct = {
-      id: `offer-${index}`,
-      name: `Special Offer ${index + 1}`,
-      category: 'Special Offers',
-      price: 999,
-      image: offerImages[index],
+      id: `offer-${offer.id}`,
+      name: offer.name,
+      category: offer.category,
+      price: offer.offerPrice,
+      originalPrice: offer.originalPrice,
+      image: offer.image,
       size: 'M',
-      color: 'Black'
+      color: 'Default'
     };
     addToCart(offerProduct);
   };
 
-  const handleOfferBuyNow = (index) => {
+  const handleOfferBuyNow = (offer) => {
     const offerProduct = {
-      id: `offer-${index}`,
-      name: `Special Offer ${index + 1}`,
-      category: 'Special Offers',
-      price: 999,
-      image: offerImages[index],
+      id: `offer-${offer.id}`,
+      name: offer.name,
+      category: offer.category,
+      price: offer.offerPrice,
+      originalPrice: offer.originalPrice,
+      image: offer.image,
       size: 'M',
-      color: 'Black'
+      color: 'Default'
     };
     addToCart(offerProduct);
     navigate('/cart');
@@ -201,34 +226,93 @@ const Home = ({ addToCart }) => {
           </p>
         </div>
 
-        {/* Desktop: Auto-scrolling marquee */}
-        <div className="relative overflow-hidden hidden md:block w-full">
-          <div className="flex gap-6 animate-marquee">
-            {[...Array(4)].map((_, setIndex) => (
-              <React.Fragment key={setIndex}>
-                {offerImages.map((image, imgIndex) => (
-                  <div key={`${setIndex}-${imgIndex}`} className="flex-shrink-0 w-80 rounded-3xl overflow-hidden shadow-2xl hover-lift group relative">
+        {offersLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-accent"></div>
+          </div>
+        ) : offers.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-xl text-gray-500">No offers available at the moment</p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop: Auto-scrolling marquee */}
+            <div className="relative overflow-hidden hidden md:block w-full">
+              <div className="flex gap-6 animate-marquee">
+                {[...Array(4)].map((_, setIndex) => (
+                  <React.Fragment key={setIndex}>
+                    {offers.map((offer, offerIndex) => (
+                      <div key={`${setIndex}-${offerIndex}`} className="flex-shrink-0 w-80 rounded-3xl overflow-hidden shadow-2xl hover-lift group relative">
+                        <img
+                          src={offer.image}
+                          alt={offer.name}
+                          className="w-full h-96 object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div className="absolute bottom-4 left-4 right-4 text-white space-y-3">
+                          <div>
+                            <p className="text-sm font-medium mb-1">{offer.name}</p>
+                            <p className="text-lg line-through text-red-400 mb-1">₹{offer.originalPrice.toFixed(0)}</p>
+                            <p className="text-3xl font-bold">₹{offer.offerPrice.toFixed(0)}</p>
+                            <p className="text-sm bg-red-500 inline-block px-3 py-1 rounded-full mt-2">
+                              {Math.round(offer.discount)}% OFF
+                            </p>
+                          </div>
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                            <button
+                              onClick={() => handleOfferAddToCart(offer)}
+                              className="flex-1 bg-white text-accent py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all duration-300 active:scale-95"
+                            >
+                              Add to Cart
+                            </button>
+                            <button
+                              onClick={() => handleOfferBuyNow(offer)}
+                              className="flex-1 bg-accent text-white py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all duration-300 active:scale-95"
+                            >
+                              Buy Now
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile: Touch-scrollable horizontal scroll with auto-scroll */}
+            <div className="md:hidden px-6 w-full">
+              <div 
+                ref={mobileOffersRef}
+                className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4" 
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {offers.map((offer, offerIndex) => (
+                  <div key={offerIndex} className="flex-shrink-0 w-[85vw] rounded-3xl overflow-hidden shadow-2xl group relative snap-center">
                     <img
-                      src={image}
-                      alt={`Offer ${imgIndex + 1}`}
-                      className="w-full h-96 object-cover transition-transform duration-700 group-hover:scale-110"
+                      src={offer.image}
+                      alt={offer.name}
+                      className="w-full h-96 object-cover transition-transform duration-700 active:scale-95"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <div className="absolute bottom-4 left-4 right-4 text-white space-y-3">
                       <div>
-                        <p className="text-lg line-through text-red-400 mb-1">₹1600</p>
-                        <p className="text-3xl font-bold">₹999</p>
-                        <p className="text-sm bg-red-500 inline-block px-3 py-1 rounded-full mt-2">Special Offer</p>
+                        <p className="text-sm font-medium mb-1">{offer.name}</p>
+                        <p className="text-lg line-through text-red-400 mb-1">₹{offer.originalPrice.toFixed(0)}</p>
+                        <p className="text-3xl font-bold">₹{offer.offerPrice.toFixed(0)}</p>
+                        <p className="text-sm bg-red-500 inline-block px-3 py-1 rounded-full mt-2">
+                          {Math.round(offer.discount)}% OFF
+                        </p>
                       </div>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => handleOfferAddToCart(imgIndex)}
+                          onClick={() => handleOfferAddToCart(offer)}
                           className="flex-1 bg-white text-accent py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all duration-300 active:scale-95"
                         >
                           Add to Cart
                         </button>
                         <button
-                          onClick={() => handleOfferBuyNow(imgIndex)}
+                          onClick={() => handleOfferBuyNow(offer)}
                           className="flex-1 bg-accent text-white py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all duration-300 active:scale-95"
                         >
                           Buy Now
@@ -237,52 +321,11 @@ const Home = ({ addToCart }) => {
                     </div>
                   </div>
                 ))}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile: Touch-scrollable horizontal scroll with auto-scroll */}
-        <div className="md:hidden px-6 w-full">
-          <div 
-            ref={mobileOffersRef}
-            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4" 
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {offerImages.map((image, imgIndex) => (
-              <div key={imgIndex} className="flex-shrink-0 w-[85vw] rounded-3xl overflow-hidden shadow-2xl group relative snap-center">
-                <img
-                  src={image}
-                  alt={`Offer ${imgIndex + 1}`}
-                  className="w-full h-96 object-cover transition-transform duration-700 active:scale-95"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                <div className="absolute bottom-4 left-4 right-4 text-white space-y-3">
-                  <div>
-                    <p className="text-lg line-through text-red-400 mb-1">₹1600</p>
-                    <p className="text-3xl font-bold">₹999</p>
-                    <p className="text-sm bg-red-500 inline-block px-3 py-1 rounded-full mt-2">Special Offer</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleOfferAddToCart(imgIndex)}
-                      className="flex-1 bg-white text-accent py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all duration-300 active:scale-95"
-                    >
-                      Add to Cart
-                    </button>
-                    <button
-                      onClick={() => handleOfferBuyNow(imgIndex)}
-                      className="flex-1 bg-accent text-white py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all duration-300 active:scale-95"
-                    >
-                      Buy Now
-                    </button>
-                  </div>
-                </div>
               </div>
-            ))}
-          </div>
-          <p className="text-center text-gray-500 text-sm mt-4">← Swipe to see more offers →</p>
-        </div>
+              <p className="text-center text-gray-500 text-sm mt-4">← Swipe to see more offers →</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Categories Section */}

@@ -125,4 +125,23 @@ export const authAPI = {
   verify: () => api.get('/auth/verify'),
 }
 
+export const offersAPI = {
+  getAll: (params) => api.get('/offers', { params }),
+  getById: (id) => api.get(`/offers/${id}`),
+  create: (data) => api.post('/offers', data),
+  update: (id, data) => api.put(`/offers/${id}`, data),
+  delete: (id) => api.delete(`/offers/${id}`),
+  // Image management
+  addImage: (id, data) => api.post(`/offers/${id}/images`, data),
+  uploadImageFile: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/offers/${id}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  deleteImage: (imageId) => api.delete(`/offers/images/${imageId}`),
+  updateStock: (id, stock_quantity) => api.patch(`/offers/${id}/stock`, { stock_quantity }),
+}
+
 export default api

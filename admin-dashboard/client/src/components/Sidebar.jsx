@@ -8,7 +8,8 @@ import {
   X,
   Sparkles,
   CreditCard,
-  Package
+  Package,
+  Tag
 } from 'lucide-react'
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -16,6 +17,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Orders', path: '/orders', icon: ShoppingCart },
     { name: 'Inventory', path: '/inventory', icon: Package },
+    { name: 'Offers', path: '/offers', icon: Tag },
     { name: 'Customers', path: '/customers', icon: Users },
     { name: 'Payment Verifications', path: '/payment-verifications', icon: CreditCard },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
