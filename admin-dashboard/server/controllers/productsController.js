@@ -383,8 +383,9 @@ export const createVariant = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
     
-    // Generate SKU
-    const sku = `${product.product_name.substring(0, 3).toUpperCase()}-${color?.substring(0, 1) || 'X'}-${size || 'OS'}`;
+    // Generate unique SKU with timestamp
+    const timestamp = Date.now().toString().slice(-6);
+    const sku = `${product.product_name.substring(0, 3).toUpperCase()}-${color?.substring(0, 1) || 'X'}-${size || 'OS'}-${timestamp}`;
     
     const variant = await db.insert(
       `INSERT INTO product_variants (product_id, color, size, sku, price_adjustment, stock_quantity)
