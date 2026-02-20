@@ -144,4 +144,18 @@ export const offersAPI = {
   updateStock: (id, stock_quantity) => api.patch(`/offers/${id}/stock`, { stock_quantity }),
 }
 
+export const categoriesAPI = {
+  getAll: (params) => api.get('/categories', { params }),
+  getById: (id) => api.get(`/categories/${id}`),
+  create: (data) => api.post('/categories', data),
+  update: (id, data) => api.put(`/categories/${id}`, data),
+  delete: (id) => api.delete(`/categories/${id}`),
+  toggleStatus: (id) => api.patch(`/categories/${id}/toggle`),
+}
+
+export const systemAPI = {
+  getMaintenanceStatus: () => api.get('/system/maintenance/status'),
+  toggleMaintenance: (data) => api.post('/system/maintenance/toggle', data),
+}
+
 export default api

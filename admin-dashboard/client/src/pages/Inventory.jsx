@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { productsAPI } from '../services/api';
-import axios from 'axios';
+import { productsAPI, categoriesAPI } from '../services/api';
 import { 
   Plus, 
   Edit, 
@@ -49,24 +48,31 @@ const Inventory = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/api/categories', {
-        params: { is_active: true }
-      });
+      const response = await categoriesAPI.getAll({ is_active: true });
       if (response.data.success) {
-        setCategories(response.data.data);
+        const cats = response.data.data;
+        console.log('Fetched categories:', cats);
+        setCategories(cats);
         // Set default category to first active category
-        if (response.data.data.length > 0 && !formData.category) {
-          setFormData(prev => ({ ...prev, category: response.data.data[0].category_name }));
+        if (cats.length > 0 && !formData.category) {
+          setFormData(prev => ({ ...prev, category: cats[0].category_name }));
         }
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      console.error('Error details:', error.response?.data);
       // Fallback to default categories if API fails
       const fallbackCategories = [
-        { category_name: 'T-Shirts' }, { category_name: 'Shirts' }, { category_name: 'Cargo' }, 
-        { category_name: 'Shorts' }, { category_name: 'Track pants' }
+        { category_id: 1, category_name: 'T-Shirts' }, 
+        { category_id: 2, category_name: 'Shirts' }, 
+        { category_id: 3, category_name: 'Cargo' }, 
+        { category_id: 4, category_name: 'Shorts' }, 
+        { category_id: 5, category_name: 'Track pants' }
       ];
       setCategories(fallbackCategories);
+      if (fallbackCategories.length > 0 && !formData.category) {
+        setFormData(prev => ({ ...prev, category: fallbackCategories[0].category_name }));
+      }
     }
   };
 
