@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Edit, Trash2, Tag, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Tag, X, Upload } from 'lucide-react'
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -21,6 +21,9 @@ const Offers = () => {
     is_featured: false,
     valid_until: ''
   })
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetchOffers()
@@ -78,13 +81,31 @@ const Offers = () => {
         stock_quantity: parseInt(formData.stock_quantity) || 0
       }
 
+      let offerId;
+      
       if (editingOffer) {
         await axios.put(`${API_URL}/offers/${editingOffer.offer_id}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         })
+        offerId = editingOffer.offer_id
       } else {
-        await axios.post(`${API_URL}/offers`, payload, {
+        const response = await axios.post(`${API_URL}/offers`, payload, {
           headers: { Authorization: `Bearer ${token}` }
+        })
+        offerId = response.data.data.offer_id
+      }
+
+      // Upload image if selected
+      if (selectedImage && offerId) {
+        setUploading(true)
+        const formDataImage = new FormData()
+        formDataImage.append('image', selectedImage)
+        
+        await axios.post(`${API_URL}/offers/${offerId}/upload-image`, formDataImage, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         })
       }
 
@@ -95,6 +116,8 @@ const Offers = () => {
     } catch (error) {
       console.error('Error saving offer:', error)
       alert(error.response?.data?.message || 'Failed to save offer')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -111,7 +134,23 @@ const Offers = () => {
       is_featured: offer.is_featured,
       valid_until: offer.valid_until ? offer.valid_until.split('T')[0] : ''
     })
+    // Set image preview if offer has image
+    if (offer.image_url || (offer.images && offer.images.length > 0)) {
+      setImagePreview(offer.image_url || offer.images[0].image_url)
+    }
     setShowModal(true)
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB')
+        return
+      }
+      setSelectedImage(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
   }
 
   const resetForm = () => {
@@ -126,6 +165,8 @@ const Offers = () => {
       is_featured: false,
       valid_until: ''
     })
+    setSelectedImage(null)
+    setImagePreview(null)
   }
 
   const handleCloseModal = () => {
@@ -289,6 +330,33 @@ const Offers = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Offer Image
+                </label>
+                <div className="flex items-center space-x-4">
+                  {imagePreview && (
+                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-300">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Max size: 5MB. Formats: JPG, PNG, WEBP</p>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
                   Offer Name *
@@ -433,14 +501,16 @@ const Offers = () => {
                   type="button"
                   onClick={handleCloseModal}
                   className="flex-1 bg-gray-200 text-black px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={uploading}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingOffer ? 'Update Offer' : 'Create Offer'}
+                  {uploading ? 'Uploading...' : (editingOffer ? 'Update Offer' : 'Create Offer')}
                 </button>
               </div>
             </form>
