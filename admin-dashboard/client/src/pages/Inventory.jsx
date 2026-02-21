@@ -246,8 +246,52 @@ const Inventory = () => {
         // Edit mode - update product and its related data
         await productsAPI.update(selectedProduct.product_id, formData);
         
-        // Note: For now, variants and bulk pricing need to be managed separately
-        // You can add/edit/delete them individually after updating the product
+        // Update existing variants
+        for (const variant of variants) {
+          if (variant.variant_id) {
+            // Update existing variant
+            console.log('Updating variant:', variant.variant_id);
+            await productsAPI.updateVariant(variant.variant_id, {
+              color: variant.color,
+              size: variant.size,
+              stock_quantity: variant.stock_quantity,
+              price_adjustment: variant.price_adjustment || 0,
+              is_available: variant.is_available !== false
+            });
+          } else {
+            // Add new variant
+            console.log('Adding new variant to product:', selectedProduct.product_id);
+            await productsAPI.addVariant(selectedProduct.product_id, variant);
+          }
+        }
+        
+        // Update bulk pricing
+        for (const bulk of bulkPricing) {
+          if (bulk.bulk_pricing_id) {
+            // Update existing bulk pricing
+            console.log('Updating bulk pricing:', bulk.bulk_pricing_id);
+            const price_per_unit = bulk.total_price / bulk.min_quantity;
+            const display_text = `${bulk.min_quantity} for ₹${bulk.total_price}`;
+            await productsAPI.updateBulkPricing(bulk.bulk_pricing_id, {
+              min_quantity: bulk.min_quantity,
+              price_per_unit: price_per_unit,
+              total_price: bulk.total_price,
+              display_text: display_text,
+              is_active: bulk.is_active !== false
+            });
+          } else {
+            // Add new bulk pricing
+            console.log('Adding new bulk pricing to product:', selectedProduct.product_id);
+            const price_per_unit = bulk.total_price / bulk.min_quantity;
+            const display_text = `${bulk.min_quantity} for ₹${bulk.total_price}`;
+            await productsAPI.addBulkPricing(selectedProduct.product_id, {
+              min_quantity: bulk.min_quantity,
+              price_per_unit: price_per_unit,
+              total_price: bulk.total_price,
+              display_text: display_text
+            });
+          }
+        }
         
         alert('Product updated successfully!');
         fetchProducts();
@@ -494,16 +538,16 @@ const Inventory = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Edit Mode Notice */}
               {modalMode === 'edit' && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm text-yellow-700">
-                        <strong>Edit Mode:</strong> You can update basic product info. To modify variants or bulk pricing, please delete and re-add them.
+                      <p className="text-sm text-green-700">
+                        <strong>Edit Mode:</strong> You can update all product details including variants and bulk pricing. Changes will be saved when you click "Update Product".
                       </p>
                     </div>
                   </div>
