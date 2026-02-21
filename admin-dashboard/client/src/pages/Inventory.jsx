@@ -218,8 +218,16 @@ const Inventory = () => {
           
           // Add variants
           for (const variant of variants) {
-            console.log('Adding variant for product:', productId);
-            await productsAPI.addVariant(productId, variant);
+            // Ensure numeric fields are valid
+            const validatedVariant = {
+              color: variant.color,
+              size: variant.size,
+              stock_quantity: parseInt(variant.stock_quantity) || 0,
+              price_adjustment: parseFloat(variant.price_adjustment) || 0,
+              is_available: variant.is_available !== false
+            };
+            console.log('Adding variant for product:', productId, validatedVariant);
+            await productsAPI.addVariant(productId, validatedVariant);
           }
           
           // Add bulk pricing
@@ -248,20 +256,23 @@ const Inventory = () => {
         
         // Update existing variants
         for (const variant of variants) {
+          // Ensure numeric fields are valid
+          const validatedVariant = {
+            color: variant.color,
+            size: variant.size,
+            stock_quantity: parseInt(variant.stock_quantity) || 0,
+            price_adjustment: parseFloat(variant.price_adjustment) || 0,
+            is_available: variant.is_available !== false
+          };
+          
           if (variant.variant_id) {
             // Update existing variant
-            console.log('Updating variant:', variant.variant_id);
-            await productsAPI.updateVariant(variant.variant_id, {
-              color: variant.color,
-              size: variant.size,
-              stock_quantity: variant.stock_quantity,
-              price_adjustment: variant.price_adjustment || 0,
-              is_available: variant.is_available !== false
-            });
+            console.log('Updating variant:', variant.variant_id, validatedVariant);
+            await productsAPI.updateVariant(variant.variant_id, validatedVariant);
           } else {
             // Add new variant
-            console.log('Adding new variant to product:', selectedProduct.product_id);
-            await productsAPI.addVariant(selectedProduct.product_id, variant);
+            console.log('Adding new variant to product:', selectedProduct.product_id, validatedVariant);
+            await productsAPI.addVariant(selectedProduct.product_id, validatedVariant);
           }
         }
         
@@ -395,7 +406,16 @@ const Inventory = () => {
 
   const handleUpdateVariant = (index, field, value) => {
     const updated = [...variants];
-    updated[index][field] = value;
+    
+    // Parse numeric fields properly
+    if (field === 'stock_quantity') {
+      updated[index][field] = parseInt(value) || 0;
+    } else if (field === 'price_adjustment') {
+      updated[index][field] = parseFloat(value) || 0;
+    } else {
+      updated[index][field] = value;
+    }
+    
     setVariants(updated);
   };
 
@@ -771,8 +791,8 @@ const Inventory = () => {
 
                       <input
                         type="number"
-                        value={variant.stock_quantity}
-                        onChange={(e) => handleUpdateVariant(index, 'stock_quantity', parseInt(e.target.value))}
+                        value={variant.stock_quantity || 0}
+                        onChange={(e) => handleUpdateVariant(index, 'stock_quantity', e.target.value)}
                         className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
                         placeholder="Stock"
                         min="0"
@@ -780,8 +800,8 @@ const Inventory = () => {
 
                       <input
                         type="number"
-                        value={variant.price_adjustment}
-                        onChange={(e) => handleUpdateVariant(index, 'price_adjustment', parseFloat(e.target.value))}
+                        value={variant.price_adjustment || 0}
+                        onChange={(e) => handleUpdateVariant(index, 'price_adjustment', e.target.value)}
                         className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
                         placeholder="Price ±"
                         step="0.01"
