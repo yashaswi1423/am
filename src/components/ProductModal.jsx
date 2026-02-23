@@ -5,7 +5,7 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
   const availableVariants = product.variants || [];
   const availableVariantsWithStock = availableVariants.filter(v => v.is_available && v.stock_quantity > 0);
   
-  // Get unique colors and sizes from available variants
+  // Get unique colors and sizes from available variants - ALL available, not filtered by selection
   const availableColors = [...new Set(availableVariantsWithStock.map(v => v.color))];
   const availableSizes = [...new Set(availableVariantsWithStock.map(v => v.size))];
   
@@ -32,45 +32,40 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
     'Brown': '#92400E'
   };
 
-  // Get available sizes for selected color (only those with stock)
-  const sizesForColor = availableVariantsWithStock
-    .filter(v => v.color === selectedColor)
-    .map(v => v.size);
-
-  // Get available colors for selected size (only those with stock)
-  const colorsForSize = availableVariantsWithStock
-    .filter(v => v.size === selectedSize)
-    .map(v => v.color);
-
-  // Get current variant
-  const currentVariant = availableVariants.find(
+  // Get current variant - try to find exact match first
+  let currentVariant = availableVariantsWithStock.find(
     v => v.color === selectedColor && v.size === selectedSize
   );
   
   // Auto-adjust selection if current combination is not available
   useEffect(() => {
-    console.log('=== PRODUCT MODAL VARIANT CHECK ===');
-    console.log('Product:', product.name);
-    console.log('Total variants:', availableVariants.length);
-    console.log('Available variants with stock:', availableVariantsWithStock.length);
-    console.log('Selected:', { color: selectedColor, size: selectedSize });
-    console.log('Current variant:', currentVariant);
+    const exactMatch = availableVariantsWithStock.find(
+      v => v.color === selectedColor && v.size === selectedSize
+    );
     
-    if (currentVariant && (!currentVariant.is_available || currentVariant.stock_quantity <= 0)) {
-      console.log('⚠️ Current variant not available, auto-adjusting...');
-      // Try to find an available variant with the same color
-      const variantWithSameColor = availableVariantsWithStock.find(v => v.color === selectedColor);
-      if (variantWithSameColor) {
-        console.log('✓ Found variant with same color:', variantWithSameColor);
-        setSelectedSize(variantWithSameColor.size);
-      } else if (availableVariantsWithStock.length > 0) {
-        // Fallback to first available variant
-        console.log('✓ Fallback to first available variant:', availableVariantsWithStock[0]);
-        setSelectedColor(availableVariantsWithStock[0].color);
-        setSelectedSize(availableVariantsWithStock[0].size);
+    if (!exactMatch && availableVariantsWithStock.length > 0) {
+      // Try to find a variant with the same size but different color
+      const variantWithSameSize = availableVariantsWithStock.find(v => v.size === selectedSize);
+      if (variantWithSameSize) {
+        setSelectedColor(variantWithSameSize.color);
+      } else {
+        // Try to find a variant with the same color but different size
+        const variantWithSameColor = availableVariantsWithStock.find(v => v.color === selectedColor);
+        if (variantWithSameColor) {
+          setSelectedSize(variantWithSameColor.size);
+        } else {
+          // Fallback to first available variant
+          setSelectedColor(availableVariantsWithStock[0].color);
+          setSelectedSize(availableVariantsWithStock[0].size);
+        }
       }
     }
-  }, [selectedColor, selectedSize, currentVariant, availableVariantsWithStock, product.name, availableVariants.length]);
+  }, [selectedColor, selectedSize, availableVariantsWithStock]);
+  
+  // Update currentVariant after auto-adjustment
+  currentVariant = availableVariantsWithStock.find(
+    v => v.color === selectedColor && v.size === selectedSize
+  );
 
   // Calculate final price with variant adjustment
   const finalPrice = currentVariant 
@@ -266,21 +261,17 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
                 <p className="text-xs md:text-sm font-semibold text-gray-700 mb-1.5">Color:</p>
                 <div className="flex gap-2 flex-wrap">
                   {availableColors.map((colorName) => {
-                    const isAvailable = colorsForSize.includes(colorName);
                     return (
                       <button
                         key={colorName}
-                        onClick={() => isAvailable && setSelectedColor(colorName)}
-                        disabled={!isAvailable}
+                        onClick={() => setSelectedColor(colorName)}
                         className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all ${
                           selectedColor === colorName 
                             ? 'border-accent scale-110 ring-2 md:ring-3 ring-accent/30' 
-                            : isAvailable
-                            ? 'border-gray-300 hover:border-gray-400'
-                            : 'border-gray-200 opacity-40 cursor-not-allowed'
+                            : 'border-gray-300 hover:border-gray-400'
                         }`}
                         style={{ backgroundColor: colorMap[colorName] || '#999999' }}
-                        title={`${colorName}${!isAvailable ? ' (Not available in this size)' : ''}`}
+                        title={colorName}
                       />
                     );
                   })}
@@ -294,20 +285,16 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
                 <p className="text-xs md:text-sm font-semibold text-gray-700 mb-1.5">Size:</p>
                 <div className="flex gap-1.5 md:gap-2 flex-wrap">
                   {availableSizes.map((size) => {
-                    const isAvailable = sizesForColor.includes(size);
                     return (
                       <button
                         key={size}
-                        onClick={() => isAvailable && setSelectedSize(size)}
-                        disabled={!isAvailable}
+                        onClick={() => setSelectedSize(size)}
                         className={`w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all ${
                           selectedSize === size
                             ? 'bg-accent text-white scale-105 ring-2 md:ring-3 ring-accent/30'
-                            : isAvailable
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
-                        title={!isAvailable ? `${size} (Not available in ${selectedColor})` : size}
+                        title={size}
                       >
                         {size}
                       </button>
