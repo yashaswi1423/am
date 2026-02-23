@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
-  // Get available colors and sizes from product variants
+  // Get available colors and sizes from product variants (only available ones with stock)
   const availableVariants = product.variants || [];
-  const availableColors = [...new Set(availableVariants.map(v => v.color))];
-  const availableSizes = [...new Set(availableVariants.map(v => v.size))];
+  const availableVariantsWithStock = availableVariants.filter(v => v.is_available && v.stock_quantity > 0);
   
-  // Set initial selections to first available option
+  // Get unique colors and sizes from available variants
+  const availableColors = [...new Set(availableVariantsWithStock.map(v => v.color))];
+  const availableSizes = [...new Set(availableVariantsWithStock.map(v => v.size))];
+  
+  // Set initial selections to first available option with stock
   const [selectedSize, setSelectedSize] = useState(availableSizes[0] || 'M');
   const [selectedColor, setSelectedColor] = useState(availableColors[0] || 'Black');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -29,20 +32,45 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
     'Brown': '#92400E'
   };
 
-  // Get available sizes for selected color
-  const sizesForColor = availableVariants
-    .filter(v => v.color === selectedColor && v.is_available && v.stock_quantity > 0)
+  // Get available sizes for selected color (only those with stock)
+  const sizesForColor = availableVariantsWithStock
+    .filter(v => v.color === selectedColor)
     .map(v => v.size);
 
-  // Get available colors for selected size
-  const colorsForSize = availableVariants
-    .filter(v => v.size === selectedSize && v.is_available && v.stock_quantity > 0)
+  // Get available colors for selected size (only those with stock)
+  const colorsForSize = availableVariantsWithStock
+    .filter(v => v.size === selectedSize)
     .map(v => v.color);
 
   // Get current variant
   const currentVariant = availableVariants.find(
     v => v.color === selectedColor && v.size === selectedSize
   );
+  
+  // Auto-adjust selection if current combination is not available
+  useEffect(() => {
+    console.log('=== PRODUCT MODAL VARIANT CHECK ===');
+    console.log('Product:', product.name);
+    console.log('Total variants:', availableVariants.length);
+    console.log('Available variants with stock:', availableVariantsWithStock.length);
+    console.log('Selected:', { color: selectedColor, size: selectedSize });
+    console.log('Current variant:', currentVariant);
+    
+    if (currentVariant && (!currentVariant.is_available || currentVariant.stock_quantity <= 0)) {
+      console.log('⚠️ Current variant not available, auto-adjusting...');
+      // Try to find an available variant with the same color
+      const variantWithSameColor = availableVariantsWithStock.find(v => v.color === selectedColor);
+      if (variantWithSameColor) {
+        console.log('✓ Found variant with same color:', variantWithSameColor);
+        setSelectedSize(variantWithSameColor.size);
+      } else if (availableVariantsWithStock.length > 0) {
+        // Fallback to first available variant
+        console.log('✓ Fallback to first available variant:', availableVariantsWithStock[0]);
+        setSelectedColor(availableVariantsWithStock[0].color);
+        setSelectedSize(availableVariantsWithStock[0].size);
+      }
+    }
+  }, [selectedColor, selectedSize, currentVariant, availableVariantsWithStock, product.name, availableVariants.length]);
 
   // Calculate final price with variant adjustment
   const finalPrice = currentVariant 
@@ -237,22 +265,25 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
               <div>
                 <p className="text-xs md:text-sm font-semibold text-gray-700 mb-1.5">Color:</p>
                 <div className="flex gap-2 flex-wrap">
-                  {availableColors.map((colorName) => (
-                    <button
-                      key={colorName}
-                      onClick={() => setSelectedColor(colorName)}
-                      disabled={!colorsForSize.includes(colorName)}
-                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all ${
-                        selectedColor === colorName 
-                          ? 'border-accent scale-110 ring-2 md:ring-3 ring-accent/30' 
-                          : colorsForSize.includes(colorName)
-                          ? 'border-gray-300 hover:border-gray-400'
-                          : 'border-gray-200 opacity-40 cursor-not-allowed'
-                      }`}
-                      style={{ backgroundColor: colorMap[colorName] || '#999999' }}
-                      title={colorName}
-                    />
-                  ))}
+                  {availableColors.map((colorName) => {
+                    const isAvailable = colorsForSize.includes(colorName);
+                    return (
+                      <button
+                        key={colorName}
+                        onClick={() => isAvailable && setSelectedColor(colorName)}
+                        disabled={!isAvailable}
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all ${
+                          selectedColor === colorName 
+                            ? 'border-accent scale-110 ring-2 md:ring-3 ring-accent/30' 
+                            : isAvailable
+                            ? 'border-gray-300 hover:border-gray-400'
+                            : 'border-gray-200 opacity-40 cursor-not-allowed'
+                        }`}
+                        style={{ backgroundColor: colorMap[colorName] || '#999999' }}
+                        title={`${colorName}${!isAvailable ? ' (Not available in this size)' : ''}`}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -262,22 +293,26 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
               <div>
                 <p className="text-xs md:text-sm font-semibold text-gray-700 mb-1.5">Size:</p>
                 <div className="flex gap-1.5 md:gap-2 flex-wrap">
-                  {availableSizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      disabled={!sizesForColor.includes(size)}
-                      className={`w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all ${
-                        selectedSize === size
-                          ? 'bg-accent text-white scale-105 ring-2 md:ring-3 ring-accent/30'
-                          : sizesForColor.includes(size)
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {availableSizes.map((size) => {
+                    const isAvailable = sizesForColor.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        onClick={() => isAvailable && setSelectedSize(size)}
+                        disabled={!isAvailable}
+                        className={`w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl text-sm md:text-base font-semibold transition-all ${
+                          selectedSize === size
+                            ? 'bg-accent text-white scale-105 ring-2 md:ring-3 ring-accent/30'
+                            : isAvailable
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                        }`}
+                        title={!isAvailable ? `${size} (Not available in ${selectedColor})` : size}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
                 </div>
                 {currentVariant && (
                   <p className="text-xs text-gray-600 mt-1">
