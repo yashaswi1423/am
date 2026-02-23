@@ -792,7 +792,10 @@ const Inventory = () => {
               {/* Variants Section */}
               <div className="space-y-4 border-t pt-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Variants (Colors & Sizes)</h3>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Variants (Colors & Sizes)</h3>
+                    <p className="text-xs text-gray-500 mt-1">Use the eye icon to show/hide variants on the website</p>
+                  </div>
                   <button
                     type="button"
                     onClick={handleAddVariant}
@@ -802,6 +805,18 @@ const Inventory = () => {
                     <span>Add Variant</span>
                   </button>
                 </div>
+
+                {/* Column Headers */}
+                {variants.length > 0 && (
+                  <div className="flex items-center space-x-2 px-3 text-xs font-semibold text-gray-600">
+                    <div className="w-[88px]">Color</div>
+                    <div className="w-[88px]">Size</div>
+                    <div className="w-20">Stock</div>
+                    <div className="w-24">Price ±</div>
+                    <div className="w-[34px]">Show</div>
+                    <div className="w-[34px]"></div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   {variants.map((variant, index) => (
@@ -843,6 +858,19 @@ const Inventory = () => {
                         placeholder="Price ±"
                         step="0.01"
                       />
+
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateVariant(index, 'is_available', !variant.is_available)}
+                        className={`p-1.5 rounded transition-colors ${
+                          variant.is_available !== false
+                            ? 'text-green-600 hover:bg-green-50'
+                            : 'text-gray-400 hover:bg-gray-100'
+                        }`}
+                        title={variant.is_available !== false ? 'Available (click to hide)' : 'Hidden (click to show)'}
+                      >
+                        {variant.is_available !== false ? <Eye size={18} /> : <EyeOff size={18} />}
+                      </button>
 
                       <button
                         type="button"
