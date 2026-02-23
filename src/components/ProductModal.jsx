@@ -72,6 +72,11 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
     ? product.price + (currentVariant.price_adjustment || 0)
     : product.price;
 
+  // Check if this is an offer product
+  const isOffer = product.isOffer || false;
+  const originalPrice = product.originalPrice || null;
+  const discount = product.discount || 0;
+
   // Sample reviews
   const reviews = [
     { name: 'Rahul S.', rating: 5, comment: 'Excellent quality! Fits perfectly.', date: '2 days ago' },
@@ -250,7 +255,17 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
             </div>
 
             {finalPrice > 0 && (
-              <div className="text-2xl md:text-3xl font-bold text-accent">₹{finalPrice}</div>
+              <div>
+                {isOffer && originalPrice && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-lg text-gray-500 line-through">₹{originalPrice.toFixed(0)}</p>
+                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                      {Math.round(discount)}% OFF
+                    </span>
+                  </div>
+                )}
+                <div className="text-2xl md:text-3xl font-bold text-accent">₹{finalPrice}</div>
+              </div>
             )}
 
             {/* Bulk Pricing Display - REMOVED FOR CUSTOMERS */}

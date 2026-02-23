@@ -8,6 +8,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const Home = ({ addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedOffer, setSelectedOffer] = useState(null);
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -183,32 +184,32 @@ const Home = ({ addToCart }) => {
     ? products
     : products.filter(product => product.category === selectedCategory);
 
-  const handleOfferAddToCart = (offer) => {
-    const offerProduct = {
+  const handleOfferClick = (offer) => {
+    // Transform offer to product format for ProductModal
+    const offerAsProduct = {
       id: `offer-${offer.id}`,
       name: offer.name,
       category: offer.category,
       price: offer.offerPrice,
       originalPrice: offer.originalPrice,
+      description: offer.description,
       image: offer.image,
-      size: 'M',
-      color: 'Default'
+      images: offer.images && offer.images.length > 0 ? offer.images : [offer.image],
+      variants: offer.variants || [],
+      isOffer: true,
+      discount: offer.discount
     };
-    addToCart(offerProduct);
+    setSelectedOffer(offerAsProduct);
   };
 
-  const handleOfferBuyNow = (offer) => {
-    const offerProduct = {
-      id: `offer-${offer.id}`,
-      name: offer.name,
-      category: offer.category,
-      price: offer.offerPrice,
-      originalPrice: offer.originalPrice,
-      image: offer.image,
-      size: 'M',
-      color: 'Default'
-    };
+  const handleOfferAddToCart = (offerProduct) => {
     addToCart(offerProduct);
+    setSelectedOffer(null);
+  };
+
+  const handleOfferBuyNow = (offerProduct) => {
+    addToCart(offerProduct);
+    setSelectedOffer(null);
     navigate('/cart');
     setTimeout(() => {
       const paymentSection = document.getElementById('payment-section');
@@ -272,7 +273,11 @@ const Home = ({ addToCart }) => {
                 {[...Array(4)].map((_, setIndex) => (
                   <React.Fragment key={setIndex}>
                     {offers.map((offer, offerIndex) => (
-                      <div key={`${setIndex}-${offerIndex}`} className="flex-shrink-0 w-80 rounded-3xl overflow-hidden shadow-2xl hover-lift group relative">
+                      <div 
+                        key={`${setIndex}-${offerIndex}`} 
+                        onClick={() => handleOfferClick(offer)}
+                        className="flex-shrink-0 w-80 rounded-3xl overflow-hidden shadow-2xl hover-lift group relative cursor-pointer"
+                      >
                         <img
                           src={offer.image}
                           alt={offer.name}
@@ -288,19 +293,8 @@ const Home = ({ addToCart }) => {
                               {Math.round(offer.discount)}% OFF
                             </p>
                           </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-                            <button
-                              onClick={() => handleOfferAddToCart(offer)}
-                              className="flex-1 bg-white text-accent py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all duration-300 active:scale-95"
-                            >
-                              Add to Cart
-                            </button>
-                            <button
-                              onClick={() => handleOfferBuyNow(offer)}
-                              className="flex-1 bg-accent text-white py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all duration-300 active:scale-95"
-                            >
-                              Buy Now
-                            </button>
+                          <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                            <p className="text-xs text-white/80">Click to view details & select size/color</p>
                           </div>
                         </div>
                       </div>
@@ -318,7 +312,11 @@ const Home = ({ addToCart }) => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {offers.map((offer, offerIndex) => (
-                  <div key={offerIndex} className="flex-shrink-0 w-[85vw] rounded-3xl overflow-hidden shadow-2xl group relative snap-center">
+                  <div 
+                    key={offerIndex} 
+                    onClick={() => handleOfferClick(offer)}
+                    className="flex-shrink-0 w-[85vw] rounded-3xl overflow-hidden shadow-2xl group relative snap-center cursor-pointer"
+                  >
                     <img
                       src={offer.image}
                       alt={offer.name}
@@ -334,19 +332,8 @@ const Home = ({ addToCart }) => {
                           {Math.round(offer.discount)}% OFF
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleOfferAddToCart(offer)}
-                          className="flex-1 bg-white text-accent py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all duration-300 active:scale-95"
-                        >
-                          Add to Cart
-                        </button>
-                        <button
-                          onClick={() => handleOfferBuyNow(offer)}
-                          className="flex-1 bg-accent text-white py-2 px-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all duration-300 active:scale-95"
-                        >
-                          Buy Now
-                        </button>
+                      <div>
+                        <p className="text-xs text-white/80">Tap to view details & select size/color</p>
                       </div>
                     </div>
                   </div>
@@ -471,6 +458,16 @@ const Home = ({ addToCart }) => {
               }
             }, 100);
           }}
+        />
+      )}
+
+      {/* Offer Detail Modal */}
+      {selectedOffer && (
+        <ProductModal
+          product={selectedOffer}
+          onClose={() => setSelectedOffer(null)}
+          onAddToCart={handleOfferAddToCart}
+          onBuyNow={handleOfferBuyNow}
         />
       )}
     </div>
