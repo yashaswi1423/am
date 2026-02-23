@@ -439,7 +439,9 @@ const Home = ({ addToCart }) => {
                 {/* Product Info - Only Image and Price */}
                 <div className="p-3 md:p-4">
                   <h3 className="text-sm md:text-base font-semibold text-gray-900 line-clamp-1 mb-1 md:mb-2">{product.name}</h3>
-                  <p className="text-lg md:text-xl font-bold text-accent">₹{product.price}</p>
+                  {product.price > 0 && (
+                    <p className="text-lg md:text-xl font-bold text-accent">₹{product.price}</p>
+                  )}
                 </div>
               </div>
             ))}

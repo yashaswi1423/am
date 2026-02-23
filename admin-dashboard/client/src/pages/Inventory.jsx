@@ -161,10 +161,10 @@ const Inventory = () => {
       errors.push('Category is required');
     }
     
-    // Validate price
+    // Validate price (allow 0 for bulk-only products)
     const priceValue = parseFloat(formData.base_price);
-    if (!formData.base_price || isNaN(priceValue) || priceValue <= 0) {
-      errors.push('Valid Base Price is required (must be greater than 0)');
+    if (formData.base_price === '' || formData.base_price === null || formData.base_price === undefined || isNaN(priceValue) || priceValue < 0) {
+      errors.push('Valid Base Price is required (use 0 for bulk-only products)');
     }
     
     // STOP if there are any errors
@@ -178,8 +178,8 @@ const Inventory = () => {
       return; // CRITICAL: Don't proceed with API call
     }
     
-    // Double-check one more time before API call
-    if (!trimmedName || !trimmedCategory || !formData.base_price || priceValue <= 0) {
+    // Double-check one more time before API call (allow 0 for bulk-only products)
+    if (!trimmedName || !trimmedCategory || formData.base_price === '' || formData.base_price === null || formData.base_price === undefined || priceValue < 0) {
       alert('Please fill in all required fields: Product Name, Category, and Base Price');
       return;
     }
@@ -691,8 +691,11 @@ const Inventory = () => {
                       value={formData.base_price}
                       onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                      placeholder="299.00"
+                      placeholder="299.00 (Use 0 for bulk-only products)"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Set to 0 for products sold only in bulk quantities
+                    </p>
                   </div>
                 </div>
 
@@ -962,9 +965,9 @@ const Inventory = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!formData.name?.trim() || !formData.category || !formData.base_price || parseFloat(formData.base_price) <= 0}
+                  disabled={!formData.name?.trim() || !formData.category || formData.base_price === '' || formData.base_price === null || formData.base_price === undefined || parseFloat(formData.base_price) < 0}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  title={!formData.name?.trim() || !formData.category || !formData.base_price || parseFloat(formData.base_price) <= 0 ? 'Please fill in all required fields' : ''}
+                  title={!formData.name?.trim() || !formData.category || formData.base_price === '' || parseFloat(formData.base_price) < 0 ? 'Please fill in all required fields' : ''}
                 >
                   <Save size={20} />
                   <span>{modalMode === 'add' ? 'Create Product' : 'Update Product'}</span>
