@@ -7,6 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const Settings = () => {
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [maintenanceMessage, setMaintenanceMessage] = useState('')
+  const [minimumBulkOrderAmount, setMinimumBulkOrderAmount] = useState('1000')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [fixing, setFixing] = useState(false)
@@ -25,6 +26,17 @@ const Settings = () => {
       if (res.data.success) {
         setMaintenanceMode(res.data.data.enabled)
         setMaintenanceMessage(res.data.data.message)
+      }
+
+      // Fetch minimum bulk order amount
+      try {
+        const bulkRes = await axios.get(`${API_URL}/system/settings/minimum_bulk_order_amount`)
+        if (bulkRes.data.success) {
+          setMinimumBulkOrderAmount(bulkRes.data.data.value || '1000')
+        }
+      } catch (err) {
+        console.error('Error fetching bulk order amount:', err)
+        // Keep default value
       }
     } catch (error) {
       console.error('Error fetching maintenance status:', error)
@@ -93,6 +105,36 @@ const Settings = () => {
     } catch (error) {
       console.error('Error saving message:', error)
       setError('Failed to save maintenance message')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveBulkAmount = async () => {
+    try {
+      setSaving(true)
+      setError(null)
+      setSuccess(null)
+      
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token')
+      const username = localStorage.getItem('adminUsername') || 'admin'
+      
+      await axios.put(
+        `${API_URL}/system/settings/minimum_bulk_order_amount`,
+        {
+          value: minimumBulkOrderAmount,
+          updated_by: username
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      
+      setSuccess('Minimum bulk order amount updated successfully')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (error) {
+      console.error('Error saving bulk amount:', error)
+      setError('Failed to save minimum bulk order amount')
     } finally {
       setSaving(false)
     }
@@ -249,24 +291,59 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Fix Variants Button */}
-        <div className="p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-medium text-black mb-1">Fix Disabled Variants</h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Enable all disabled product variants and set default stock quantity (10 units) for variants with zero stock.
-                This will make all size/color combinations available for purchase.
-              </p>
+        <div className="space-y-4">
+          {/* Minimum Bulk Order Amount */}
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <h3 className="font-medium text-black mb-1">Minimum Bulk Order Amount</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Set the minimum amount to charge for bulk orders (products with price = ₹0). 
+              This amount will be shown at checkout for bulk order products.
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-black mb-2">
+                  Amount (₹)
+                </label>
+                <input
+                  type="number"
+                  value={minimumBulkOrderAmount}
+                  onChange={(e) => setMinimumBulkOrderAmount(e.target.value)}
+                  min="0"
+                  step="100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                  placeholder="1000"
+                />
+              </div>
+              <button
+                onClick={handleSaveBulkAmount}
+                disabled={saving}
+                className="mt-6 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                <Save className="w-4 h-4" />
+                <span>{saving ? 'Saving...' : 'Save Amount'}</span>
+              </button>
             </div>
-            <button
-              onClick={handleFixVariants}
-              disabled={fixing}
-              className="ml-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              <RefreshCw className={`w-4 h-4 ${fixing ? 'animate-spin' : ''}`} />
-              <span>{fixing ? 'Fixing...' : 'Fix All Variants'}</span>
-            </button>
+          </div>
+
+          {/* Fix Variants Button */}
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-medium text-black mb-1">Fix Disabled Variants</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Enable all disabled product variants and set default stock quantity (10 units) for variants with zero stock.
+                  This will make all size/color combinations available for purchase.
+                </p>
+              </div>
+              <button
+                onClick={handleFixVariants}
+                disabled={fixing}
+                className="ml-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                <RefreshCw className={`w-4 h-4 ${fixing ? 'animate-spin' : ''}`} />
+                <span>{fixing ? 'Fixing...' : 'Fix All Variants'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { customerAPI, orderAPI } from '../services/api';
 import Payment from './Payment';
 
@@ -17,8 +17,40 @@ const Cart = ({ cartItems, removeFromCart, updateQuantity }) => {
   const [orderNumber, setOrderNumber] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [orderData, setOrderData] = useState(null);
+  const [minimumBulkOrderAmount, setMinimumBulkOrderAmount] = useState(1000);
 
-  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Fetch minimum bulk order amount on component mount
+  useEffect(() => {
+    const fetchBulkOrderAmount = async () => {
+      try {
+        const API_URL = 'https://am-seven-coral.vercel.app/api';
+        const response = await fetch(`${API_URL}/system/settings/minimum_bulk_order_amount`);
+        const data = await response.json();
+        if (data.success && data.data.value) {
+          setMinimumBulkOrderAmount(parseFloat(data.data.value));
+        }
+      } catch (error) {
+        console.error('Error fetching bulk order amount:', error);
+        // Keep default value of 1000
+      }
+    };
+    fetchBulkOrderAmount();
+  }, []);
+
+  // Calculate total with bulk order logic
+  const calculateTotal = () => {
+    const hasBulkItems = cartItems.some(item => item.price === 0);
+    
+    if (hasBulkItems) {
+      // If there are any bulk order items (price = 0), use minimum bulk order amount
+      return minimumBulkOrderAmount;
+    } else {
+      // Normal calculation for regular items
+      return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    }
+  };
+
+  const total = calculateTotal();
 
   const handleAddressChange = (e) => {
     setAddressForm({
@@ -234,7 +266,11 @@ const Cart = ({ cartItems, removeFromCart, updateQuantity }) => {
                             </svg>
                           </button>
                         </div>
-                        <p className="text-2xl font-bold text-accent transition-all duration-300 group-hover:scale-110">₹{(item.price * item.quantity)}</p>
+                        {item.price === 0 ? (
+                          <p className="text-lg font-bold text-blue-600 transition-all duration-300 group-hover:scale-110">Bulk Order</p>
+                        ) : (
+                          <p className="text-2xl font-bold text-accent transition-all duration-300 group-hover:scale-110">₹{(item.price * item.quantity)}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -348,6 +384,17 @@ const Cart = ({ cartItems, removeFromCart, updateQuantity }) => {
             {/* Order Summary */}
             <div id="payment-section" className="bg-accent rounded-3xl p-6 shadow-2xl text-white animate-slide-left stagger-1 hover-glow">
               <h2 className="text-2xl font-semibold mb-6">Order Summary</h2>
+              
+              {/* Bulk Order Notice */}
+              {cartItems.some(item => item.price === 0) && (
+                <div className="mb-4 p-3 bg-white/10 rounded-xl border border-white/20">
+                  <p className="text-sm text-white font-medium mb-1">📦 Bulk Order</p>
+                  <p className="text-xs text-gray-200">
+                    This is a bulk order. Minimum order amount: ₹{minimumBulkOrderAmount}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-200">
                   <span>Subtotal</span>
