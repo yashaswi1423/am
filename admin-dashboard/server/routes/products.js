@@ -22,9 +22,20 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Product routes
-router.get('/', getAllProducts);
-router.get('/:id', getProductById);
+// Middleware to prevent caching of product data
+const noCacheMiddleware = (req, res, next) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  next();
+};
+
+// Product routes - with no-cache for GET requests
+router.get('/', noCacheMiddleware, getAllProducts);
+router.get('/:id', noCacheMiddleware, getProductById);
 router.post('/', authenticateToken, createProduct);
 router.put('/:id', authenticateToken, updateProduct);
 router.delete('/:id', authenticateToken, deleteProduct);

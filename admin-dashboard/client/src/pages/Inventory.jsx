@@ -542,12 +542,39 @@ const Inventory = () => {
                 <p className="text-sm text-gray-500 mb-2">{product.category}</p>
                 <p className="text-xl font-bold text-blue-600 mb-3">₹{parseFloat(product.base_price).toFixed(2)}</p>
 
-                {/* Variants Summary */}
+                {/* Variants Summary with Quick Stock Edit */}
                 <div className="mb-3">
                   <p className="text-xs text-gray-600 mb-1">Variants: {product.variants?.length || 0}</p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 mb-2">
                     Total Stock: {product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0}
                   </p>
+                  
+                  {/* Quick Stock Edit for each variant */}
+                  {product.variants && product.variants.length > 0 && (
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {product.variants.map((variant) => (
+                        <div key={variant.variant_id} className="flex items-center justify-between text-xs bg-gray-50 p-1 rounded">
+                          <span className="text-gray-700 truncate flex-1">
+                            {variant.color} / {variant.size}
+                          </span>
+                          <div className="flex items-center space-x-1">
+                            <input
+                              type="number"
+                              min="0"
+                              value={variant.stock_quantity}
+                              onChange={(e) => {
+                                const newStock = parseInt(e.target.value) || 0;
+                                handleUpdateStock(variant.variant_id, newStock);
+                              }}
+                              className="w-14 px-1 py-0.5 border border-gray-300 rounded text-xs text-gray-900"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <Package size={12} className="text-gray-400" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}

@@ -371,7 +371,10 @@ export const deleteProductImage = async (req, res) => {
 export const createVariant = async (req, res) => {
   try {
     const { id } = req.params;
-    const { color, size, price_adjustment, stock_quantity } = req.body;
+    const { color, size, price_adjustment, stock_quantity, is_available } = req.body;
+    
+    console.log('Creating variant for product:', id);
+    console.log('Variant data:', { color, size, stock_quantity, price_adjustment, is_available });
     
     // Get product name for SKU
     const product = await db.getOne(
@@ -388,10 +391,12 @@ export const createVariant = async (req, res) => {
     const sku = `${product.product_name.substring(0, 3).toUpperCase()}-${color?.substring(0, 1) || 'X'}-${size || 'OS'}-${timestamp}`;
     
     const variant = await db.insert(
-      `INSERT INTO product_variants (product_id, color, size, sku, price_adjustment, stock_quantity)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [id, color, size, sku, price_adjustment || 0, stock_quantity || 0]
+      `INSERT INTO product_variants (product_id, color, size, sku, price_adjustment, stock_quantity, is_available)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [id, color, size, sku, price_adjustment || 0, stock_quantity || 0, is_available !== false]
     );
+    
+    console.log('Variant created successfully:', variant);
     
     res.status(201).json({ success: true, data: variant });
   } catch (error) {
@@ -408,14 +413,25 @@ export const updateVariant = async (req, res) => {
     const { id } = req.params;
     const { color, size, price_adjustment, stock_quantity, is_available } = req.body;
     
+    console.log('Updating variant:', id);
+    console.log('New values:', { color, size, stock_quantity, price_adjustment, is_available });
+    
     await db.update(
       `UPDATE product_variants 
        SET color = $1, size = $2, price_adjustment = $3, stock_quantity = $4, is_available = $5
        WHERE variant_id = $6`,
-      [color, size, price_adjustment, stock_quantity, is_available, id]
+      [color, size, price_adjustment, stock_quantity, is_available !== false, id]
     );
     
-    res.json({ success: true, message: 'Variant updated successfully' });
+    // Verify the update
+    const updated = await db.getOne(
+      'SELECT * FROM product_variants WHERE variant_id = $1',
+      [id]
+    );
+    
+    console.log('Variant updated successfully:', updated);
+    
+    res.json({ success: true, message: 'Variant updated successfully', data: updated });
   } catch (error) {
     console.error('Update variant error:', error);
     res.status(500).json({ success: false, message: error.message });

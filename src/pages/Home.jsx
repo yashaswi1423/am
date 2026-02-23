@@ -94,7 +94,9 @@ const Home = ({ addToCart }) => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/products?is_active=true`);
+      // Add cache-busting parameter to ensure fresh data
+      const timestamp = new Date().getTime();
+      const response = await axios.get(`${API_URL}/products?is_active=true&_t=${timestamp}`);
       if (response.data.success) {
         // Transform database products to match the expected format
         const transformedProducts = response.data.data.map(product => ({
