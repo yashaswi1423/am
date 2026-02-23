@@ -144,7 +144,8 @@ export const createOffer = async (req, res) => {
       category,
       is_active,
       is_featured,
-      valid_until
+      valid_until,
+      variants
     } = req.body;
     
     // Validation
@@ -202,6 +203,30 @@ export const createOffer = async (req, res) => {
     );
     
     console.log('✅ Offer created:', offer);
+    
+    // Insert variants if provided
+    if (variants && Array.isArray(variants) && variants.length > 0) {
+      console.log(`Inserting ${variants.length} variants...`);
+      for (const variant of variants) {
+        await db.insert(
+          `INSERT INTO offer_variants (
+            offer_id, size, color, sku, stock_quantity, 
+            price_adjustment, is_available
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            offer.offer_id,
+            variant.size,
+            variant.color,
+            variant.sku,
+            parseInt(variant.stock_quantity) || 0,
+            parseFloat(variant.price_adjustment) || 0,
+            variant.is_available !== false
+          ]
+        );
+      }
+      console.log('✅ Variants inserted');
+    }
+    
     res.status(201).json({ success: true, data: offer });
   } catch (error) {
     console.error('❌ Create offer error:', error);
@@ -224,7 +249,8 @@ export const updateOffer = async (req, res) => {
       category,
       is_active,
       is_featured,
-      valid_until
+      valid_until,
+      variants
     } = req.body;
     
     console.log('Updating offer:', { id, name, original_price, offer_price });
@@ -248,6 +274,34 @@ export const updateOffer = async (req, res) => {
         id
       ]
     );
+    
+    // Update variants if provided
+    if (variants && Array.isArray(variants)) {
+      console.log(`Updating variants for offer ${id}...`);
+      
+      // Delete existing variants
+      await db.deleteRecord('DELETE FROM offer_variants WHERE offer_id = $1', [id]);
+      
+      // Insert new variants
+      for (const variant of variants) {
+        await db.insert(
+          `INSERT INTO offer_variants (
+            offer_id, size, color, sku, stock_quantity, 
+            price_adjustment, is_available
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            id,
+            variant.size,
+            variant.color,
+            variant.sku,
+            parseInt(variant.stock_quantity) || 0,
+            parseFloat(variant.price_adjustment) || 0,
+            variant.is_available !== false
+          ]
+        );
+      }
+      console.log('✅ Variants updated');
+    }
     
     res.json({ success: true, message: 'Offer updated successfully' });
   } catch (error) {

@@ -24,6 +24,11 @@ const Offers = () => {
   const [selectedImage, setSelectedImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [variants, setVariants] = useState([])
+  const [showVariants, setShowVariants] = useState(false)
+  
+  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+  const colors = ['Black', 'White', 'Grey', 'Blue', 'Red', 'Green', 'Yellow', 'Pink', 'Brown', 'Navy']
 
   useEffect(() => {
     fetchOffers()
@@ -78,7 +83,12 @@ const Offers = () => {
         ...formData,
         original_price: parseFloat(formData.original_price),
         offer_price: parseFloat(formData.offer_price),
-        stock_quantity: parseInt(formData.stock_quantity) || 0
+        stock_quantity: parseInt(formData.stock_quantity) || 0,
+        variants: variants.map(v => ({
+          ...v,
+          stock_quantity: parseInt(v.stock_quantity) || 0,
+          price_adjustment: parseFloat(v.price_adjustment) || 0
+        }))
       }
 
       let offerId;
@@ -138,6 +148,9 @@ const Offers = () => {
     if (offer.image_url || (offer.images && offer.images.length > 0)) {
       setImagePreview(offer.image_url || offer.images[0].image_url)
     }
+    // Load variants if available
+    setVariants(offer.variants || [])
+    setShowVariants((offer.variants || []).length > 0)
     setShowModal(true)
   }
 
@@ -167,6 +180,8 @@ const Offers = () => {
     })
     setSelectedImage(null)
     setImagePreview(null)
+    setVariants([])
+    setShowVariants(false)
   }
 
   const handleCloseModal = () => {
@@ -178,6 +193,49 @@ const Offers = () => {
   const calculateDiscount = (original, offer) => {
     if (!original || !offer) return 0
     return Math.round(((original - offer) / original) * 100)
+  }
+
+  const handleAddVariant = () => {
+    const newVariant = {
+      size: sizes[0],
+      color: colors[0],
+      stock_quantity: 0,
+      price_adjustment: 0,
+      is_available: true,
+      sku: `OFFER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    }
+    setVariants([...variants, newVariant])
+  }
+
+  const handleRemoveVariant = (index) => {
+    setVariants(variants.filter((_, i) => i !== index))
+  }
+
+  const handleVariantChange = (index, field, value) => {
+    const updatedVariants = [...variants]
+    updatedVariants[index] = {
+      ...updatedVariants[index],
+      [field]: value
+    }
+    setVariants(updatedVariants)
+  }
+
+  const handleGenerateVariants = () => {
+    const newVariants = []
+    sizes.forEach(size => {
+      colors.forEach(color => {
+        newVariants.push({
+          size,
+          color,
+          stock_quantity: 10,
+          price_adjustment: 0,
+          is_available: true,
+          sku: `OFFER-${Date.now()}-${size}-${color}-${Math.random().toString(36).substr(2, 5)}`
+        })
+      })
+    })
+    setVariants(newVariants)
+    setShowVariants(true)
   }
 
   if (loading) {
@@ -494,6 +552,115 @@ const Offers = () => {
                   />
                   <span className="text-sm text-black">Featured</span>
                 </label>
+              </div>
+
+              {/* Variants Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-black">Variants (Size & Color)</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowVariants(!showVariants)}
+                      className="text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      {showVariants ? 'Hide' : 'Show'} Variants
+                    </button>
+                    {showVariants && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleGenerateVariants}
+                          className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200"
+                        >
+                          Generate All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAddVariant}
+                          className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200"
+                        >
+                          + Add Variant
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {showVariants && (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {variants.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No variants added. Click "Add Variant" or "Generate All" to create variants.
+                      </p>
+                    ) : (
+                      variants.map((variant, index) => (
+                        <div key={index} className="grid grid-cols-6 gap-2 p-2 bg-gray-50 rounded items-center">
+                          <select
+                            value={variant.size}
+                            onChange={(e) => handleVariantChange(index, 'size', e.target.value)}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm text-black"
+                          >
+                            {sizes.map(size => (
+                              <option key={size} value={size}>{size}</option>
+                            ))}
+                          </select>
+                          
+                          <select
+                            value={variant.color}
+                            onChange={(e) => handleVariantChange(index, 'color', e.target.value)}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm text-black"
+                          >
+                            {colors.map(color => (
+                              <option key={color} value={color}>{color}</option>
+                            ))}
+                          </select>
+                          
+                          <input
+                            type="number"
+                            value={variant.stock_quantity}
+                            onChange={(e) => handleVariantChange(index, 'stock_quantity', e.target.value)}
+                            placeholder="Stock"
+                            min="0"
+                            className="px-2 py-1 border border-gray-300 rounded text-sm text-black"
+                          />
+                          
+                          <input
+                            type="number"
+                            value={variant.price_adjustment}
+                            onChange={(e) => handleVariantChange(index, 'price_adjustment', e.target.value)}
+                            placeholder="Price ±"
+                            step="0.01"
+                            className="px-2 py-1 border border-gray-300 rounded text-sm text-black"
+                          />
+                          
+                          <label className="flex items-center justify-center">
+                            <input
+                              type="checkbox"
+                              checked={variant.is_available}
+                              onChange={(e) => handleVariantChange(index, 'is_available', e.target.checked)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                            />
+                          </label>
+                          
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveVariant(index)}
+                            className="text-red-600 hover:text-red-700 flex items-center justify-center"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                    {variants.length > 0 && (
+                      <div className="text-xs text-gray-600 mt-2 p-2 bg-blue-50 rounded">
+                        <p className="font-medium">Columns: Size | Color | Stock | Price Adjustment | Available | Delete</p>
+                        <p className="mt-1">Total variants: {variants.length} | Total stock: {variants.reduce((sum, v) => sum + (parseInt(v.stock_quantity) || 0), 0)}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-3 pt-4">
