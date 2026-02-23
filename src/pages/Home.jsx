@@ -106,6 +106,19 @@ const Home = ({ addToCart }) => {
           description: product.description,
           variants: product.variants
         }));
+        
+        // DEBUG: Log products with their variants
+        console.log('=== PRODUCTS LOADED ===');
+        console.log('Total products:', transformedProducts.length);
+        transformedProducts.forEach(p => {
+          console.log(`Product: ${p.name}, Variants: ${p.variants?.length || 0}`);
+          if (p.variants && p.variants.length > 0) {
+            p.variants.forEach(v => {
+              console.log(`  - ${v.color} ${v.size}: Stock ${v.stock_quantity}, Available: ${v.is_available}`);
+            });
+          }
+        });
+        
         setProducts(transformedProducts);
       }
     } catch (error) {

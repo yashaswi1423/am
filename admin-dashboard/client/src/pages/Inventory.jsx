@@ -23,6 +23,7 @@ const Inventory = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   
   // Form state
   const [formData, setFormData] = useState({
@@ -106,6 +107,13 @@ const Inventory = () => {
       });
       setImages(product.images || []);
       setVariants(product.variants || []);
+      
+      // DEBUG: Log variants being loaded
+      console.log('=== EDITING PRODUCT ===');
+      console.log('Product:', product.product_name);
+      console.log('Total variants loaded:', (product.variants || []).length);
+      console.log('Variants detail:', product.variants);
+      
       // Load bulk pricing and convert to the format used in the form
       const bulkPricingData = (product.bulk_pricing || []).map(bp => ({
         min_quantity: bp.min_quantity,
@@ -252,6 +260,10 @@ const Inventory = () => {
         }
       } else {
         // Edit mode - update product and its related data
+        console.log('=== UPDATING PRODUCT ===');
+        console.log('Product ID:', selectedProduct.product_id);
+        console.log('Total variants to update:', variants.length);
+        
         await productsAPI.update(selectedProduct.product_id, formData);
         
         // Update existing variants
@@ -275,6 +287,8 @@ const Inventory = () => {
             await productsAPI.addVariant(selectedProduct.product_id, validatedVariant);
           }
         }
+        
+        console.log('=== ALL VARIANTS UPDATED ===');
         
         // Update bulk pricing
         for (const bulk of bulkPricing) {
@@ -452,6 +466,11 @@ const Inventory = () => {
     }
   };
 
+  // Filter products by category
+  const filteredProducts = selectedCategory === 'All' 
+    ? products 
+    : products.filter(product => product.category === selectedCategory);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -463,6 +482,24 @@ const Inventory = () => {
           <Plus size={20} />
           <span>Add Product</span>
         </button>
+      </div>
+
+      {/* Category Filter */}
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Category</label>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+        >
+          <option value="All">All Categories</option>
+          {categories.map(cat => (
+            <option key={cat.category_id} value={cat.category_name}>{cat.category_name}</option>
+          ))}
+        </select>
+        <p className="text-sm text-gray-500 mt-2">
+          Showing {filteredProducts.length} of {products.length} products
+        </p>
       </div>
 
       {error && (
@@ -477,7 +514,7 @@ const Inventory = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <div key={product.product_id} className="bg-white rounded-lg shadow-md overflow-hidden">
               {/* Product Image */}
               <div className="relative h-48 bg-gray-100">
