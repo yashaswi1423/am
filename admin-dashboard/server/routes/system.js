@@ -5,7 +5,8 @@ import {
   getSettingByKey,
   updateSetting,
   toggleMaintenanceMode,
-  getMaintenanceStatus
+  getMaintenanceStatus,
+  fixDisabledVariants
 } from '../controllers/systemController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
@@ -19,5 +20,6 @@ router.get('/settings', authenticateToken, getAllSettings);
 router.get('/settings/:key', authenticateToken, getSettingByKey);
 router.put('/settings/:key', authenticateToken, updateSetting);
 router.post('/maintenance/toggle', authenticateToken, toggleMaintenanceMode);
+router.post('/fix-variants', authenticateToken, fixDisabledVariants);
 
 export default router;

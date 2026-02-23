@@ -152,3 +152,51 @@ export const getMaintenanceStatus = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+/* ===========================
+   POST /api/system/fix-variants
+   Fix all disabled variants
+=========================== */
+export const fixDisabledVariants = async (req, res) => {
+  try {
+    const { default_stock = 10 } = req.body;
+    
+    // Step 1: Enable all variants
+    const enableResult = await db.update(
+      `UPDATE product_variants 
+       SET is_available = true 
+       WHERE is_available = false OR is_available IS NULL`
+    );
+    
+    // Step 2: Set default stock for variants with zero or null stock
+    const stockResult = await db.update(
+      `UPDATE product_variants 
+       SET stock_quantity = $1 
+       WHERE stock_quantity = 0 OR stock_quantity IS NULL`,
+      [default_stock]
+    );
+    
+    // Step 3: Get summary
+    const summary = await db.getOne(
+      `SELECT 
+        COUNT(*) as total_variants,
+        SUM(CASE WHEN is_available = true THEN 1 ELSE 0 END) as available_variants,
+        SUM(CASE WHEN stock_quantity > 0 THEN 1 ELSE 0 END) as variants_with_stock,
+        SUM(stock_quantity) as total_stock
+       FROM product_variants`
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'All variants have been fixed and enabled',
+      data: {
+        variants_enabled: enableResult,
+        stock_updated: stockResult,
+        summary: summary
+      }
+    });
+  } catch (error) {
+    console.error('Fix variants error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

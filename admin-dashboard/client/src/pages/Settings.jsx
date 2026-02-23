@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Settings as SettingsIcon, Power, AlertTriangle, Save } from 'lucide-react'
+import { Settings as SettingsIcon, Power, AlertTriangle, Save, RefreshCw } from 'lucide-react'
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -9,6 +9,7 @@ const Settings = () => {
   const [maintenanceMessage, setMaintenanceMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [fixing, setFixing] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
 
@@ -94,6 +95,44 @@ const Settings = () => {
       setError('Failed to save maintenance message')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleFixVariants = async () => {
+    if (!window.confirm('This will enable all disabled variants and set stock to 10 for variants with 0 stock. Continue?')) {
+      return
+    }
+
+    try {
+      setFixing(true)
+      setError(null)
+      setSuccess(null)
+      
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token')
+      
+      const response = await axios.post(
+        `${API_URL}/system/fix-variants`,
+        { default_stock: 10 },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      
+      if (response.data.success) {
+        const summary = response.data.data.summary
+        setSuccess(
+          `✅ Fixed all variants!\n` +
+          `Total variants: ${summary.total_variants}\n` +
+          `Available: ${summary.available_variants}\n` +
+          `With stock: ${summary.variants_with_stock}\n` +
+          `Total stock: ${summary.total_stock}`
+        )
+      }
+    } catch (error) {
+      console.error('Error fixing variants:', error)
+      setError(error.response?.data?.message || 'Failed to fix variants')
+    } finally {
+      setFixing(false)
     }
   }
 
@@ -210,8 +249,25 @@ const Settings = () => {
           </div>
         </div>
 
-        <div className="text-center py-8 text-gray-500">
-          <p>Additional settings will be available here</p>
+        {/* Fix Variants Button */}
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="font-medium text-black mb-1">Fix Disabled Variants</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Enable all disabled product variants and set default stock quantity (10 units) for variants with zero stock.
+                This will make all size/color combinations available for purchase.
+              </p>
+            </div>
+            <button
+              onClick={handleFixVariants}
+              disabled={fixing}
+              className="ml-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              <RefreshCw className={`w-4 h-4 ${fixing ? 'animate-spin' : ''}`} />
+              <span>{fixing ? 'Fixing...' : 'Fix All Variants'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
