@@ -10,6 +10,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 seconds timeout
 })
 
 api.interceptors.request.use(
@@ -28,6 +29,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout - server took too long to respond')
+      error.message = 'Request timeout. Please try again.'
+    }
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       window.location.href = '/login'
