@@ -5,6 +5,53 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+// Image component with better error handling
+const ProductImage = ({ src, alt, className, onError }) => {
+  const [imgSrc, setImgSrc] = React.useState(src);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    setImgSrc(src);
+    setIsLoading(true);
+    setHasError(false);
+  }, [src]);
+
+  const handleError = (e) => {
+    console.error('Image failed to load:', src);
+    setHasError(true);
+    setIsLoading(false);
+    setImgSrc('/placeholder.svg');
+    if (onError) onError(e);
+  };
+
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  return (
+    <>
+      {isLoading && !hasError && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+          <svg className="w-8 h-8 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      )}
+      <img
+        src={imgSrc}
+        alt={alt}
+        className={className}
+        onError={handleError}
+        onLoad={handleLoad}
+        loading="lazy"
+        style={{ display: isLoading ? 'none' : 'block' }}
+      />
+    </>
+  );
+};
+
 const Home = ({ addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -97,18 +144,28 @@ const Home = ({ addToCart }) => {
       setLoading(true);
       // Add cache-busting parameter to ensure fresh data
       const timestamp = new Date().getTime();
-      const response = await axios.get(`${API_URL}/products?is_active=true&_t=${timestamp}`);
+      const response = await axios.get(`${API_URL}/products?is_active=true&_t=${timestamp}`, {
+        timeout: 30000 // 30 second timeout
+      });
       if (response.data.success) {
         // Transform database products to match the expected format
-        const transformedProducts = response.data.data.map(product => ({
-          id: product.product_id,
-          name: product.product_name,
-          category: product.category,
-          price: parseFloat(product.base_price),
-          images: product.images.map(img => img.image_url),
-          description: product.description,
-          variants: product.variants
-        }));
+        const transformedProducts = response.data.data.map(product => {
+          // Ensure images array exists and has valid URLs
+          const validImages = (product.images || [])
+            .filter(img => img && img.image_url)
+            .map(img => img.image_url)
+            .filter(url => url && url.trim() !== '');
+          
+          return {
+            id: product.product_id,
+            name: product.product_name,
+            category: product.category,
+            price: parseFloat(product.base_price),
+            images: validImages.length > 0 ? validImages : ['/placeholder.svg'],
+            description: product.description,
+            variants: product.variants
+          };
+        });
         
         // DEBUG: Log products with their variants
         console.log('=== PRODUCTS LOADED ===');
@@ -126,6 +183,9 @@ const Home = ({ addToCart }) => {
       }
     } catch (error) {
       console.error('Error fetching products:', error);
+      if (error.code === 'ECONNABORTED') {
+        console.error('Request timed out - please check your internet connection');
+      }
     } finally {
       setLoading(false);
     }
@@ -134,26 +194,46 @@ const Home = ({ addToCart }) => {
   const fetchOffers = async () => {
     try {
       setOffersLoading(true);
-      const response = await axios.get(`${API_URL}/offers?is_active=true`);
+      const response = await axios.get(`${API_URL}/offers?is_active=true`, {
+        timeout: 30000 // 30 second timeout
+      });
       if (response.data.success) {
         // Transform database offers to match the expected format
-        const transformedOffers = response.data.data.map(offer => ({
-          id: offer.offer_id,
-          name: offer.offer_name,
-          description: offer.description,
-          originalPrice: parseFloat(offer.original_price),
-          offerPrice: parseFloat(offer.offer_price),
-          discount: parseFloat(offer.discount_percentage || 0),
-          stock: offer.stock_quantity,
-          image: offer.image_url || (offer.images && offer.images.length > 0 ? offer.images[0].image_url : null),
-          images: offer.images ? offer.images.map(img => img.image_url) : [],
-          category: offer.category || 'Special Offers',
-          variants: offer.variants || []
-        }));
+        const transformedOffers = response.data.data.map(offer => {
+          // Get primary image or first image
+          let primaryImage = '/placeholder.svg';
+          if (offer.images && offer.images.length > 0) {
+            const primary = offer.images.find(img => img.is_primary);
+            primaryImage = primary ? primary.image_url : offer.images[0].image_url;
+          }
+          
+          // Get all valid image URLs
+          const validImages = (offer.images || [])
+            .filter(img => img && img.image_url)
+            .map(img => img.image_url)
+            .filter(url => url && url.trim() !== '');
+          
+          return {
+            id: offer.offer_id,
+            name: offer.offer_name,
+            description: offer.description,
+            originalPrice: parseFloat(offer.original_price),
+            offerPrice: parseFloat(offer.offer_price),
+            discount: parseFloat(offer.discount_percentage || 0),
+            stock: offer.stock_quantity,
+            image: primaryImage,
+            images: validImages.length > 0 ? validImages : [primaryImage],
+            category: offer.category || 'Special Offers',
+            variants: offer.variants || []
+          };
+        });
         setOffers(transformedOffers);
       }
     } catch (error) {
       console.error('Error fetching offers:', error);
+      if (error.code === 'ECONNABORTED') {
+        console.error('Request timed out - please check your internet connection');
+      }
       // Fallback to empty array if API fails
       setOffers([]);
     } finally {
@@ -278,15 +358,10 @@ const Home = ({ addToCart }) => {
                         onClick={() => handleOfferClick(offer)}
                         className="flex-shrink-0 w-80 rounded-3xl overflow-hidden shadow-2xl hover-lift group relative cursor-pointer"
                       >
-                        <img
-                          src={offer.image || '/placeholder.svg'}
+                        <ProductImage
+                          src={offer.image}
                           alt={offer.name}
                           className="w-full h-96 object-cover transition-transform duration-700 group-hover:scale-110"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = '/placeholder.svg';
-                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                         <div className="absolute bottom-4 left-4 right-4 text-white space-y-3">
@@ -322,15 +397,10 @@ const Home = ({ addToCart }) => {
                     onClick={() => handleOfferClick(offer)}
                     className="flex-shrink-0 w-[85vw] rounded-3xl overflow-hidden shadow-2xl group relative snap-center cursor-pointer"
                   >
-                    <img
-                      src={offer.image || '/placeholder.svg'}
+                    <ProductImage
+                      src={offer.image}
                       alt={offer.name}
                       className="w-full h-96 object-cover transition-transform duration-700 active:scale-95"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/placeholder.svg';
-                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <div className="absolute bottom-4 left-4 right-4 text-white space-y-3">
@@ -407,15 +477,10 @@ const Home = ({ addToCart }) => {
               >
                 {/* Product Image */}
                 <div className="relative overflow-hidden aspect-[3/4] bg-gray-100">
-                  <img
-                    src={product.images && product.images.length > 0 ? product.images[0] : product.image || '/placeholder.svg'}
+                  <ProductImage
+                    src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder.svg'}
                     alt={product.name}
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/placeholder.svg';
-                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
