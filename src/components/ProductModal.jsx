@@ -170,10 +170,15 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
               onTouchEnd={handleTouchEnd}
             >
               <img
-                src={images[currentImageIndex]}
+                src={images[currentImageIndex] || '/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-full object-cover select-none"
                 draggable="false"
+                loading="lazy"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/placeholder.svg';
+                }}
               />
               
               {images.length > 1 && (
@@ -227,7 +232,16 @@ const ProductModal = ({ product, onClose, onAddToCart, onBuyNow }) => {
                       currentImageIndex === idx ? 'border-accent scale-105' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img 
+                      src={img || '/placeholder.svg'} 
+                      alt={`${product.name} ${idx + 1}`} 
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/placeholder.svg';
+                      }}
+                    />
                   </button>
                 ))}
               </div>

@@ -9,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 30000, // 30 seconds timeout
 });
 
 // Request interceptor for logging
@@ -27,6 +27,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout - server took too long to respond');
+      error.message = 'Request timeout. Please try again.';
+    }
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }

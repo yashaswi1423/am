@@ -279,9 +279,14 @@ const Home = ({ addToCart }) => {
                         className="flex-shrink-0 w-80 rounded-3xl overflow-hidden shadow-2xl hover-lift group relative cursor-pointer"
                       >
                         <img
-                          src={offer.image}
+                          src={offer.image || '/placeholder.svg'}
                           alt={offer.name}
                           className="w-full h-96 object-cover transition-transform duration-700 group-hover:scale-110"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/placeholder.svg';
+                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                         <div className="absolute bottom-4 left-4 right-4 text-white space-y-3">
@@ -318,9 +323,14 @@ const Home = ({ addToCart }) => {
                     className="flex-shrink-0 w-[85vw] rounded-3xl overflow-hidden shadow-2xl group relative snap-center cursor-pointer"
                   >
                     <img
-                      src={offer.image}
+                      src={offer.image || '/placeholder.svg'}
                       alt={offer.name}
                       className="w-full h-96 object-cover transition-transform duration-700 active:scale-95"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/placeholder.svg';
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <div className="absolute bottom-4 left-4 right-4 text-white space-y-3">
@@ -398,9 +408,14 @@ const Home = ({ addToCart }) => {
                 {/* Product Image */}
                 <div className="relative overflow-hidden aspect-[3/4] bg-gray-100">
                   <img
-                    src={product.images ? product.images[0] : product.image}
+                    src={product.images && product.images.length > 0 ? product.images[0] : product.image || '/placeholder.svg'}
                     alt={product.name}
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/placeholder.svg';
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
