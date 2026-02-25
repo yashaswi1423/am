@@ -89,6 +89,18 @@ export const getAllProducts = async (req, res) => {
     query += ` GROUP BY p.product_id ORDER BY p.created_at DESC`;
 
     const products = await db.getMany(query, params);
+    
+    // Log image data for debugging
+    console.log('=== PRODUCTS API RESPONSE ===');
+    console.log(`Total products: ${products.length}`);
+    products.forEach(p => {
+      console.log(`Product: ${p.product_name}, Images: ${p.images?.length || 0}`);
+      if (p.images && p.images.length > 0) {
+        p.images.forEach((img, idx) => {
+          console.log(`  Image ${idx + 1}: ${img.image_url ? img.image_url.substring(0, 80) : 'NULL'}`);
+        });
+      }
+    });
 
     res.json({ success: true, data: products });
   } catch (error) {

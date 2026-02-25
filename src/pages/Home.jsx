@@ -147,14 +147,37 @@ const Home = ({ addToCart }) => {
       const response = await axios.get(`${API_URL}/products?is_active=true&_t=${timestamp}`, {
         timeout: 30000 // 30 second timeout
       });
+      
+      console.log('=== RAW API RESPONSE ===');
+      console.log('Success:', response.data.success);
+      console.log('Data count:', response.data.data?.length);
+      
       if (response.data.success) {
+        // Log first product to see structure
+        if (response.data.data.length > 0) {
+          console.log('First product sample:', JSON.stringify(response.data.data[0], null, 2));
+        }
+        
         // Transform database products to match the expected format
         const transformedProducts = response.data.data.map(product => {
+          console.log(`Processing product: ${product.product_name}`);
+          console.log('Raw images:', product.images);
+          
           // Ensure images array exists and has valid URLs
           const validImages = (product.images || [])
-            .filter(img => img && img.image_url)
-            .map(img => img.image_url)
-            .filter(url => url && url.trim() !== '');
+            .filter(img => {
+              const isValid = img && img.image_url && img.image_url.trim() !== '';
+              if (!isValid) {
+                console.warn(`Invalid image for ${product.product_name}:`, img);
+              }
+              return isValid;
+            })
+            .map(img => {
+              console.log(`Valid image URL: ${img.image_url}`);
+              return img.image_url;
+            });
+          
+          console.log(`Product ${product.product_name} has ${validImages.length} valid images`);
           
           return {
             id: product.product_id,
@@ -171,11 +194,9 @@ const Home = ({ addToCart }) => {
         console.log('=== PRODUCTS LOADED ===');
         console.log('Total products:', transformedProducts.length);
         transformedProducts.forEach(p => {
-          console.log(`Product: ${p.name}, Variants: ${p.variants?.length || 0}`);
-          if (p.variants && p.variants.length > 0) {
-            p.variants.forEach(v => {
-              console.log(`  - ${v.color} ${v.size}: Stock ${v.stock_quantity}, Available: ${v.is_available}`);
-            });
+          console.log(`Product: ${p.name}, Images: ${p.images.length}, Variants: ${p.variants?.length || 0}`);
+          if (p.images.length > 0 && p.images[0] !== '/placeholder.svg') {
+            console.log(`  First image: ${p.images[0]}`);
           }
         });
         
@@ -197,21 +218,47 @@ const Home = ({ addToCart }) => {
       const response = await axios.get(`${API_URL}/offers?is_active=true`, {
         timeout: 30000 // 30 second timeout
       });
+      
+      console.log('=== RAW OFFERS API RESPONSE ===');
+      console.log('Success:', response.data.success);
+      console.log('Offers count:', response.data.data?.length);
+      
       if (response.data.success) {
+        // Log first offer to see structure
+        if (response.data.data.length > 0) {
+          console.log('First offer sample:', JSON.stringify(response.data.data[0], null, 2));
+        }
+        
         // Transform database offers to match the expected format
         const transformedOffers = response.data.data.map(offer => {
+          console.log(`Processing offer: ${offer.offer_name}`);
+          console.log('Raw offer images:', offer.images);
+          
           // Get primary image or first image
           let primaryImage = '/placeholder.svg';
           if (offer.images && offer.images.length > 0) {
             const primary = offer.images.find(img => img.is_primary);
             primaryImage = primary ? primary.image_url : offer.images[0].image_url;
+            console.log(`Primary image for ${offer.offer_name}: ${primaryImage}`);
+          } else {
+            console.warn(`No images found for offer: ${offer.offer_name}`);
           }
           
           // Get all valid image URLs
           const validImages = (offer.images || [])
-            .filter(img => img && img.image_url)
-            .map(img => img.image_url)
-            .filter(url => url && url.trim() !== '');
+            .filter(img => {
+              const isValid = img && img.image_url && img.image_url.trim() !== '';
+              if (!isValid) {
+                console.warn(`Invalid image for ${offer.offer_name}:`, img);
+              }
+              return isValid;
+            })
+            .map(img => {
+              console.log(`Valid offer image URL: ${img.image_url}`);
+              return img.image_url;
+            });
+          
+          console.log(`Offer ${offer.offer_name} has ${validImages.length} valid images`);
           
           return {
             id: offer.offer_id,
@@ -227,6 +274,16 @@ const Home = ({ addToCart }) => {
             variants: offer.variants || []
           };
         });
+        
+        console.log('=== OFFERS LOADED ===');
+        console.log('Total offers:', transformedOffers.length);
+        transformedOffers.forEach(o => {
+          console.log(`Offer: ${o.name}, Images: ${o.images.length}`);
+          if (o.images.length > 0 && o.images[0] !== '/placeholder.svg') {
+            console.log(`  First image: ${o.images[0]}`);
+          }
+        });
+        
         setOffers(transformedOffers);
       }
     } catch (error) {

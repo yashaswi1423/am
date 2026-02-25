@@ -70,6 +70,18 @@ export const getAllOffers = async (req, res) => {
     
     const offers = await db.getMany(query, params);
     
+    // Log image data for debugging
+    console.log('=== OFFERS API RESPONSE ===');
+    console.log(`Total offers: ${offers.length}`);
+    offers.forEach(o => {
+      console.log(`Offer: ${o.offer_name}, Images: ${o.images?.length || 0}`);
+      if (o.images && o.images.length > 0) {
+        o.images.forEach((img, idx) => {
+          console.log(`  Image ${idx + 1}: ${img.image_url ? img.image_url.substring(0, 80) : 'NULL'}`);
+        });
+      }
+    });
+    
     res.json({ success: true, data: offers });
   } catch (error) {
     console.error('Get offers error:', error);
