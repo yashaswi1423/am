@@ -10,13 +10,18 @@ UPDATE storage.buckets
 SET public = true 
 WHERE id = 'product-images';
 
--- Step 2: Create policy to allow public read access
-CREATE POLICY IF NOT EXISTS "Public Access"
+-- Step 2: Drop existing policy if it exists (to avoid conflict)
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Public read access" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public read" ON storage.objects;
+
+-- Step 3: Create new policy to allow public read access
+CREATE POLICY "Public read product images"
 ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'product-images');
 
--- Step 3: Verify it worked
+-- Step 4: Verify it worked
 SELECT id, name, public FROM storage.buckets WHERE id = 'product-images';
 
 -- Expected result: public should be TRUE
